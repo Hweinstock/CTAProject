@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  cta:
+    build: .
+    image: cta
+    environment:
+      - TERM=xterm-256color
+    volumes:
+      - .:/project/
