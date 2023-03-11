@@ -6,7 +6,7 @@ import logging
 
 
 DATE_FORMAT = "%Y-%m-%d"
-MIN_ARTICLES = 100
+MIN_ARTICLES = 1000
 STOCK_PRICE_LAG = 3
 dotenv_path = Path('config/.env')
 load_dotenv(dotenv_path)

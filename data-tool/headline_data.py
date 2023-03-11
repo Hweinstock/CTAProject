@@ -39,7 +39,7 @@ class HeadlineData:
         return stock_data
 
         
-    def download_data(start_date: datetime, end_date: datetime):
+    def download_data(start_date: datetime, end_date: datetime, output_dir: str = '../stock_data/'):
         """
         Download all articles from Benzinga
         Parse unique stock tags. 
@@ -51,7 +51,6 @@ class HeadlineData:
         """
         articles_df, unique_stocks = Benzinga.query_articles(start_date, end_date)
         RootLogger.log_info(f"Found {len(articles_df.index)} articles with {len(unique_stocks)} stocks")
-        output_dir = '../output/'
 
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
@@ -73,6 +72,3 @@ class HeadlineData:
 
             combined_df = pd.merge(stock_articles, stock_df, on="date").drop_duplicates()
             combined_df.to_csv(os.path.join(output_dir, f'{cur_stock}-data.csv'))
-
-    def __init__(self):
-        pass 
