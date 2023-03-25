@@ -57,9 +57,11 @@ class HeadlineData(Dataset):
         }
     
 class RobertaClass(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, freeze_roberta=False):
         super(RobertaClass, self).__init__()
         self.ll = RobertaModel.from_pretrained('roberta-base')
+        if freeze_roberta:
+            self.ll.requires_grad_(False)
         self.pre_classifier = torch.nn.Linear(768, 768)
         self.dropout = torch.nn.Dropout(0.3)
         self.classifier = torch.nn.Linear(768, 3)
@@ -203,7 +205,7 @@ def calculate_accuracy(preds, targets):
 
 def main():
 
-    model = RobertaClass() 
+    model = RobertaClass(True) 
     model.to(device)
 
     loss_function = torch.nn.CrossEntropyLoss()
