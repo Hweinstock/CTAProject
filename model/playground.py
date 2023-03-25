@@ -209,7 +209,7 @@ def main():
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params = model.parameters(), lr = LEARNING_RATE)
 
-    train_data_path = '../processed_stock_data/AAPL-data.csv'
+    train_data_path = '../processed_stock_data/headline-data.csv'
     df = get_train_data(train_data_path)
     SPModel = RobertaFineTuner(model, loss_function, optimizer, df)
     EPOCHS = 1

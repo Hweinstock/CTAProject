@@ -1,7 +1,0 @@
-date,title,stock,close,volume,1_past_close,2_past_close,3_past_close,4_past_close,5_past_close,next_close,next_volume,label
-2022-10-26,Intel's Self Driving Tech Company Mobileye Soars Over 28% On Debut,MBLY,,,,,,,,-0.0346902492827019,,1
-2022-10-26,"Intel Raises $861M From Its Self-Driving Technology Mobileye's IPO, Starts Trading Today",MBLY,,,,,,,,-0.0346902492827019,,1
-2022-10-27,"Intel Shares Jump On Cost Cutting Measures, Mobileye IPO Despite Revenue Miss, Weak Guidance",MBLY,-0.0346902492827019,,,,,,,-0.0099010067191547,inf,1
-2022-10-28,"Is Self Driving Dead? Tesla Gets Sued, Ford Shuts Down Argo AI - But Mobileye IPOs",MBLY,-0.0099010067191547,inf,-0.0346902492827019,,,,,-0.0229629940456814,0.2230173298901714,1
-2022-11-22,"Intel's PC Share Gains Offset By Server Headwinds, Analyst Says",MBLY,0.0855988237502609,-0.4398447060809385,-0.0422238127979602,-0.0203378196460852,0.0069420606264114,-0.0367770106011853,0.0176931088316667,-0.0081218198752832,-0.0453518155793279,1
-2023-01-04,British Chip Designer Arm Eyes Lucrative Automotive Market,MBLY,-0.0483032701904316,0.7494232839493515,-0.0670280147395718,0.0159374986528071,0.0276949505588905,-0.0215617095090222,0.0100058904405009,,,2
