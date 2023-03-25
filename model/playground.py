@@ -1,18 +1,17 @@
 from transformers import RobertaModel, RobertaTokenizer
 from torch.utils.data import Dataset, DataLoader
 import torch
+from torch import cuda
 import pandas as pd 
 from tqdm import tqdm
 from typing import Tuple
 
-# https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
+# code taken from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
 MAX_LEN = 256
 TRAIN_BATCH_SIZE = 8 
 VALID_BATCH_SIZE = 4 
 LEARNING_RATE = 1e-05
-
-from torch import cuda
 
 device = 'cuda' if cuda.is_available() else 'cpu'
 tokenizer = RobertaTokenizer.from_pretrained('roberta-base', truncation=True, do_lower_case=True)
@@ -77,7 +76,7 @@ class RobertaClass(torch.nn.Module):
         output = self.classifier(pooler)
         return output
 
-class StockPredictionModel:
+class RobertaFineTuner:
 
     def __init__(self, model: torch.nn.Module, loss_function, optimizer, data_source: pd.DataFrame):
         self.model = model 
@@ -117,7 +116,7 @@ class StockPredictionModel:
 
         return training_loader, testing_loader
 
-    def train(self, epoch):
+    def train(self, epoch: int):
         tr_loss = 0
         n_correct = 0 
         nb_tr_steps = 0
@@ -212,12 +211,12 @@ def main():
 
     train_data_path = '../processed_stock_data/AAPL-data.csv'
     df = get_train_data(train_data_path)
-    SPModel = StockPredictionModel(model, loss_function, optimizer, df)
+    SPModel = RobertaFineTuner(model, loss_function, optimizer, df)
     EPOCHS = 1
     for epoch in range(EPOCHS):
         SPModel.train(epoch)
 
-    acc = SPModel.valid(model, SPModel.testing_loader)
+    acc = SPModel.valid()
     print("Accuracy on test data = %0.2f%%" % acc)
 
     output_model_file = 'pytorch_roberta_sentiment.bin'
