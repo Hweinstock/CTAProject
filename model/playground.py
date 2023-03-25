@@ -62,7 +62,7 @@ class RobertaClass(torch.nn.Module):
         self.ll = RobertaModel.from_pretrained('roberta-base')
         self.pre_classifier = torch.nn.Linear(768, 768)
         self.dropout = torch.nn.Dropout(0.3)
-        self.classifier = torch.nn.Linear(768, 5)
+        self.classifier = torch.nn.Linear(768, 3)
     
     def forward(self, input_ids, attention_mask, token_type_ids):
         output_1 = self.ll(input_ids=input_ids, 
@@ -119,6 +119,41 @@ def train(epoch):
 
     return 
 
+def valid(model, testing_loader):
+    model.eval()
+    n_correct = 0
+    n_wrong = 0
+    total = 0
+    tr_loss = 0
+    nb_tr_steps = 0 
+    nb_tr_examples= 0 
+    with torch.no_grad():
+        for _, data in tqdm(enumerate(testing_loader, 0)):
+            ids = data['ids'].to(device, dtype = torch.long)
+            mask = data['mask'].to(device, dtype = torch.long)
+            token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
+            targets = data['targets'].to(device, dtype=torch.long)
+            outputs = model(ids, mask, token_type_ids).squeeze()
+            loss = loss_function(outputs, targets)
+            tr_loss += loss.item()
+            big_val, big_idx = torch.max(outputs.data, dim=1)
+            n_correct += calculate_accuracy(big_idx, targets)
+
+            nb_tr_steps += 1
+            nb_tr_examples += targets.size(0)
+
+            if _% 5000 == 0:
+                loss_step = tr_loss / nb_tr_steps 
+                accu_step = (n_correct*100) / nb_tr_examples 
+                print(f"Validation Loss per 100 steps: {loss_step}")
+                print(f"Validation Accuracy per 100 steps: {accu_step}")
+    epoch_loss = tr_loss / nb_tr_steps 
+    epoch_accu = (n_correct*100) / nb_tr_examples 
+    print(f"Validation Loss Epoch: {epoch_loss}")
+    print(f"Validation Accuracy Epoch: {epoch_accu}")
+
+    return epoch_accu
+
 train_size = 0.8
 train_data = new_df.sample(frac=train_size, random_state=200)
 test_data = new_df.drop(train_data.index).reset_index(drop=True)
@@ -154,3 +189,15 @@ optimizer = torch.optim.Adam(params = model.parameters(), lr = LEARNING_RATE)
 EPOCHS = 1
 for epoch in range(EPOCHS):
     train(epoch)
+
+acc = valid(model, testing_loader)
+print("Accuracy on test data = %0.2f%%" % acc)
+
+output_model_file = 'pytorch_roberta_sentiment.bin'
+output_vocab_file = './'
+
+model_to_save = model
+torch.save(model_to_save, output_model_file)
+tokenizer.save_vocabulary(output_vocab_file)
+
+print('All files saved')
