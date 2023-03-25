@@ -1,5 +1,6 @@
 data/**
-stock-data/**
+raw_stock-data/**
+processed_stock-data-og/**
 *.DS_Store
 venv/**
 .env
