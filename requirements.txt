@@ -7,7 +7,6 @@ chardet==3.0.4
 charset-normalizer==3.1.0
 cryptography==39.0.2
 dbus-python==1.2.16
-distro-info===0.23ubuntu1
 frozendict==2.3.5
 html5lib==1.1
 idna==2.8
