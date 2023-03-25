@@ -147,6 +147,7 @@ training_loader = DataLoader(training_set, **train_params)
 testing_loader = DataLoader(testing_set, **test_params)
 
 model = RobertaClass() 
+model.to(device)
 loss_function = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(params = model.parameters(), lr = LEARNING_RATE)
 
