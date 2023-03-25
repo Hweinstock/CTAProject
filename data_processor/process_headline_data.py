@@ -53,6 +53,14 @@ def process_data_dir(dir_path: str, output_path: str) -> List[str]:
     
     return output_files
 
+def merge_stock_data(file_names: List[str], output_dir: str, output_name: str) -> str:
+    
+    df = pd.concat((pd.read_csv(f) for f in file_names), ignore_index=True)
+
+    output_file = os.path.join(output_dir, output_name)
+    df.to_csv(output_file)
+    return output_file
+
 
 
 if __name__ == "__main__":
@@ -62,4 +70,5 @@ if __name__ == "__main__":
     output_path = "../processed_stock_data/"
 
     # process_stock_csv(file_path, output_path)
-    process_data_dir(data_path, output_path)
+    files = process_data_dir(data_path, output_path)
+    merged_file = merge_stock_data(files, output_path, 'headline-data.csv')
