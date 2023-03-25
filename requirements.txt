@@ -27,7 +27,6 @@ soupsieve==2.4
 structlog==22.3.0
 torch==1.13.1
 typing-extensions==4.5.0
-unattended-upgrades==0.1
 urllib3==1.25.10
 webencodings==0.5.1
 yfinance==0.2.12
