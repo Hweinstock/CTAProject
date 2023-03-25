@@ -6,9 +6,9 @@ INC_CUTOFF = 0.005
 DEC_CUTOFF = -0.005
 
 class Label(IntEnum):
-    INCREASE = 1
-    DECREASE = 2 
-    NEUTRAL = 3
+    INCREASE = 0
+    DECREASE = 1
+    NEUTRAL = 2
 
 def determine_label(val: float) -> Label:
     """

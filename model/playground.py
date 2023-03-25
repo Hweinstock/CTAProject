@@ -62,7 +62,7 @@ class RobertaClass(torch.nn.Module):
         self.ll = RobertaModel.from_pretrained('roberta-base')
         self.pre_classifier = torch.nn.Linear(768, 768)
         self.dropout = torch.nn.Dropout(0.3)
-        self.classifier = torch.nn.Linear(768, 5)
+        self.classifier = torch.nn.Linear(768, 3)
     
     def forward(self, input_ids, attention_mask, token_type_ids):
         output_1 = self.ll(input_ids=input_ids, 

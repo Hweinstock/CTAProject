@@ -19,7 +19,8 @@ pip install benzinga && \
 pip install python-dotenv && \ 
 pip install colorama && \
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu && \
-pip install colorama
+pip install colorama && \
+pip install transformers
 
 WORKDIR /project/
 
