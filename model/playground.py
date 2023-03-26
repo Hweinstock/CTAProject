@@ -9,7 +9,7 @@ from typing import Tuple
 # code taken from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
 MAX_LEN = 256
-TRAIN_BATCH_SIZE = 8 
+TRAIN_BATCH_SIZE = 10 
 VALID_BATCH_SIZE = 4 
 LEARNING_RATE = 1e-05
 
@@ -80,11 +80,14 @@ class RobertaClass(torch.nn.Module):
 
 class RobertaFineTuner:
 
-    def __init__(self, model: torch.nn.Module, loss_function, optimizer, data_source: pd.DataFrame):
+    def __init__(self, model: torch.nn.Module, 
+                 loss_function, optimizer, data_source: pd.DataFrame, 
+                 data_limit: None or int = None):
         self.model = model 
         self.loss_function = loss_function 
         self.optimizer = optimizer
-
+        if data_limit is not None:
+            data_source = data_source.source(data_limit)
         self.training_loader, self.testing_loader = self.initialize_dataloaders(data_source)
         
     
@@ -213,7 +216,7 @@ def main():
 
     train_data_path = '../processed_stock_data/headline-data.csv'
     df = get_train_data(train_data_path)
-    SPModel = RobertaFineTuner(model, loss_function, optimizer, df)
+    SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit=50000)
     EPOCHS = 1
     for epoch in range(EPOCHS):
         SPModel.train(epoch)
