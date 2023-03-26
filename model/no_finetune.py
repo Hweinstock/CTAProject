@@ -60,11 +60,11 @@ class Trainer:
 
         for i, data in tqdm(enumerate(self.trainset), total=len(self.trainset)):
             inputs, labels = data 
-            inputs.to(device)
-            labels.to(device)
+            model_inputs = inputs.to(device)
+            model_labels = labels.to(device)
             self.optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = self.loss_function(outputs[0], labels)
+            outputs = self.model(model_inputs)
+            loss = self.loss_function(outputs[0], model_labels)
             loss.backward()
             self.optimizer.step() 
 
@@ -82,10 +82,10 @@ class Trainer:
 
         for i, vdata in tqdm(enumerate(self.testset), total=len(self.testset)):
             vinputs, vlabels = vdata 
-            vinputs.to(device)
-            vlabels.to(device)
-            voutputs = model(vinputs)
-            vloss = loss_fn(voutputs[0], vlabels)
+            model_vinputs = vinputs.to(device)
+            model_vlabels = vlabels.to(device)
+            voutputs = model(model_vinputs)
+            vloss = loss_fn(voutputs[0], model_vlabels)
             running_vloss += vloss 
         
         return running_vloss / (i+1)
