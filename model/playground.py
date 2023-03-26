@@ -87,7 +87,7 @@ class RobertaFineTuner:
         self.loss_function = loss_function 
         self.optimizer = optimizer
         if data_limit is not None:
-            data_source = data_source.source(data_limit)
+            data_source = data_source.head(data_limit)
         self.training_loader, self.testing_loader = self.initialize_dataloaders(data_source)
         
     
