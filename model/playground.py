@@ -124,7 +124,7 @@ class RobertaFineTuner:
         nb_tr_steps = 0
         nb_tr_examples = 0
         self.model.train()
-        for _, data in tqdm(enumerate(self.training_loader, 0)):
+        for _, data in tqdm(enumerate(self.training_loader, 0), total=len(self.training_loader)):
             ids = data['ids'].to(device, dtype=torch.long)
             mask = data['mask'].to(device, dtype=torch.long)
             token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
@@ -205,7 +205,7 @@ def calculate_accuracy(preds, targets):
 
 def main():
 
-    model = RobertaClass(True) 
+    model = RobertaClass(False) 
     model.to(device)
 
     loss_function = torch.nn.CrossEntropyLoss()
