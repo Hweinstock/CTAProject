@@ -1,5 +1,5 @@
 from config.load_env import APIkeys, DATE_FORMAT
-from ..common.logger import RootLogger
+from .config.logger import RootLogger
 from benzinga import news_data 
 from benzinga.benzinga_errors import BadRequestError
 from datetime import datetime

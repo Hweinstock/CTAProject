@@ -34,6 +34,8 @@ class RobertaClass(torch.nn.Module):
         self.pre_classifier = torch.nn.Linear(768, 768)
         self.dropout = torch.nn.Dropout(0.3)
         self.classifier = torch.nn.Linear(768, 3)
+
+        self.SoftMax = torch.nn.LogSoftmax(dim=1)
     
     def forward(self, input):
         output_1 = self.ll(**input)
@@ -70,8 +72,8 @@ class Trainer:
 
             running_loss += loss.item() 
 
-            if i % 1000 == 0:
-                last_loss = running_loss / 1000 # loss per batch
+            if i % 5000 == 0:
+                last_loss = running_loss / 5000 # loss per batch
                 print('  batch {} loss: {}'.format(i + 1, last_loss))
                 running_loss = 0
         
@@ -79,16 +81,20 @@ class Trainer:
 
     def validate(self):
         running_vloss = 0
+        correct = 0 
 
         for i, vdata in tqdm(enumerate(self.testset), total=len(self.testset)):
             vinputs, vlabels = vdata 
             model_vinputs = vinputs.to(device)
             model_vlabels = vlabels.to(device)
             voutputs = model(model_vinputs)
+            confidence, choice =  torch.max(voutputs, 1)
+            if choice.item() == model_vlabels.item():
+                correct += 1
             vloss = loss_fn(voutputs[0], model_vlabels)
             running_vloss += vloss 
         
-        return running_vloss / (i+1)
+        return running_vloss / (i+1), correct / len(self.testset)
         
 
 
@@ -109,23 +115,22 @@ print(f"Testing samples: {len(testset)}")
 train_dataloader = DataLoader(trainset, batch_size = 10, shuffle=True, num_workers=0)
 test_dataloader = DataLoader(testset, batch_size=10, shuffle=True, num_workers=0)
 
-optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 loss_fn = torch.nn.CrossEntropyLoss()
 
 ModelTrainer = Trainer(model, trainset, testset, optimizer, loss_fn)
-print("Training One Epoch")
 
 EPOCHS = 3
 
-for epoch in range(EPOCHS):
+for epoch in enumerate(range(EPOCHS)):
 
     model.train(True)
     train_avg_loss = ModelTrainer.train_one_epoch(0)
     model.train(False)
-    test_avg_loss = ModelTrainer.validate()
+    test_avg_loss, accuracy = ModelTrainer.validate()
     print(f"Train loss:{train_avg_loss}, Validation loss: {test_avg_loss}")
-
+    print(f"Test accuracy: {accuracy*100}%")
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     model_path = 'model_{}_{}'.format(timestamp, 0)
-    torch.save(model.state_dict(), model_path)
+    #torch.save(model.state_dict(), model_path)
 print("done")
