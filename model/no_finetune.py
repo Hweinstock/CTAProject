@@ -1,5 +1,6 @@
 import torch 
 from torch.utils.data import Dataset, DataLoader, random_split
+from torch import cuda
 from transformers import RobertaModel, AutoTokenizer 
 import pandas as pd
 from tqdm import tqdm
@@ -59,6 +60,8 @@ class Trainer:
 
         for i, data in tqdm(enumerate(self.trainset), total=len(self.trainset)):
             inputs, labels = data 
+            inputs.to(device)
+            labels.to(device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
             loss = self.loss_function(outputs[0], labels)
@@ -79,6 +82,8 @@ class Trainer:
 
         for i, vdata in tqdm(enumerate(self.testset), total=len(self.testset)):
             vinputs, vlabels = vdata 
+            vinputs.to(device)
+            vlabels.to(device)
             voutputs = model(vinputs)
             vloss = loss_fn(voutputs[0], vlabels)
             running_vloss += vloss 
@@ -87,8 +92,9 @@ class Trainer:
         
 
 
-
+device = 'cuda' if cuda.is_available() else 'cpu'
 model = RobertaClass()
+model.to(device)
 tokenizer = AutoTokenizer.from_pretrained("roberta-base")
 train_split = 0.8
 
