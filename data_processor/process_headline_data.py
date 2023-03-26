@@ -61,14 +61,20 @@ def merge_stock_data(file_names: List[str], output_dir: str, output_name: str) -
     df.to_csv(output_file)
     return output_file
 
+def filter_out_neutral(df: pd.DataFrame, outputfile: str):
+    new_df = df[df['label'] != Label.NEUTRAL]
+    new_df.to_csv(outputfile)
+    return outputfile
+
 
 
 if __name__ == "__main__":
     data_path = "../raw_stock_data/"
-    file_path = os.path.join(data_path, 'AAPL-data.csv')
 
     output_path = "../processed_stock_data/"
+    final_path = os.path.join(output_path, 'headline-data-filtered.csv')
 
     # process_stock_csv(file_path, output_path)
     files = process_data_dir(data_path, output_path)
     merged_file = merge_stock_data(files, output_path, 'headline-data.csv')
+    filter_file = filter_out_neutral(pd.read_csv(merged_file), final_path)

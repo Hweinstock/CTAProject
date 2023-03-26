@@ -64,7 +64,7 @@ class RobertaClass(torch.nn.Module):
             self.ll.requires_grad_(False)
         self.pre_classifier = torch.nn.Linear(768, 768)
         self.dropout = torch.nn.Dropout(0.3)
-        self.classifier = torch.nn.Linear(768, 3)
+        self.classifier = torch.nn.Linear(768, 2)
     
     def forward(self, input_ids, attention_mask, token_type_ids):
         output_1 = self.ll(input_ids=input_ids, 
@@ -214,7 +214,7 @@ def main():
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params = model.parameters(), lr = LEARNING_RATE)
 
-    train_data_path = '../processed_stock_data/headline-data.csv'
+    train_data_path = '../processed_stock_data/headline-data-filtered.csv'
     df = get_train_data(train_data_path)
     SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit=50000)
     EPOCHS = 1
