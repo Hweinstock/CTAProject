@@ -132,5 +132,5 @@ for epoch in enumerate(range(EPOCHS)):
     print(f"Test accuracy: {accuracy*100}%")
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     model_path = 'model_{}_{}'.format(timestamp, 0)
-    #torch.save(model.state_dict(), model_path)
+    torch.save(model.state_dict(), model_path)
 print("done")
