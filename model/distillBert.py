@@ -173,7 +173,7 @@ class RobertaFineTuner:
         nb_tr_steps = 0 
         nb_tr_examples= 0 
         with torch.no_grad():
-            for _, data in tqdm(enumerate(self.testing_loader, 0)):
+            for _, data in tqdm(enumerate(self.testing_loader, 0), total=len(self.testing_loader)):
                 ids = data['ids'].to(device, dtype = torch.long)
                 mask = data['mask'].to(device, dtype = torch.long)
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
@@ -208,8 +208,17 @@ class RobertaFineTuner:
                     print(f"Validation Accuracy per 100 steps: {accu_step}")
         epoch_loss = tr_loss / nb_tr_steps 
         epoch_accu = (n_correct*100) / nb_tr_examples 
-        epoch_prec = true_positives / (true_positives + false_positives)
-        epoch_recall = true_positives / (true_positives + false_negatives)
+        try:
+            epoch_prec = true_positives / (true_positives + false_positives)
+            epoch_recall = true_positives / (true_positives + false_negatives)
+        except ZeroDivisionError:
+            epoch_prec = 0
+            epoch_recall = 0
+            print(f"true positives: {true_positives}")
+            print(f"true negatives: {true_negatives}")
+            print(f"false positives: {false_positives}")
+            print(f"false negatives: {false_negatives}")
+
         print(f"Validation Loss Epoch: {epoch_loss}")
         print(f"Validation Accuracy Epoch: {epoch_accu}")
         print(f"Validation Precision Epoch: {epoch_prec}")
@@ -239,7 +248,7 @@ def main():
     train_data_path = '../processed_stock_data/headline-data-filtered.csv'
     df = get_train_data(train_data_path)
     SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit=10000)
-    EPOCHS = 1
+    EPOCHS = 10
     for epoch in range(EPOCHS):
         SPModel.train(epoch)
 
