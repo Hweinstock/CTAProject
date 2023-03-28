@@ -214,6 +214,7 @@ class RobertaFineTuner:
                     print(f"Validation Accuracy per 100 steps: {accu_step}")
         epoch_loss = tr_loss / nb_tr_steps 
         epoch_accu = (n_correct*100) / nb_tr_examples 
+        epoch_f1 = (2*true_positives) / (2*true_positives +  false_positives + false_negatives)
         try:
             epoch_prec = true_positives / (true_positives + false_positives)
             epoch_recall = true_positives / (true_positives + false_negatives)
@@ -229,6 +230,7 @@ class RobertaFineTuner:
         print(f"Validation Accuracy Epoch: {epoch_accu}")
         print(f"Validation Precision Epoch: {epoch_prec}")
         print(f"Validation Recall Epoch: {epoch_recall}")
+        print(f"F1 score: {epoch_f1}")
 
         return epoch_accu
     

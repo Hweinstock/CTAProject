@@ -40,31 +40,40 @@ def process_stock_csv(path: str, output_path: str) -> str:
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
+    
     df.to_csv(outputfile, index=False)
     return outputfile
 
 def process_data_dir(dir_path: str, output_path: str) -> List[str]:
-    
+    print(f"Processing data directory {dir_path}")
     csv_to_process = [f for f in os.listdir(dir_path) if os.path.splitext(f)[-1] == '.csv']
     output_files = []
     for _, csv_name in tqdm(enumerate(csv_to_process), total=len(csv_to_process)):
         filename = process_stock_csv(os.path.join(dir_path, csv_name), output_path)
         output_files.append(filename)
-    
+    print(f"Exporting files to {output_path}")
     return output_files
 
-def merge_stock_data(file_names: List[str], output_dir: str, output_name: str) -> str:
-    
+def merge_stock_data(file_names: List[str], output_dir: str, output_name: str, remove: bool = True) -> str:
+    output_file = os.path.join(output_dir, output_name)
+    print(f"Merged stock data into {output_file}")
     df = pd.concat((pd.read_csv(f) for f in file_names), ignore_index=True)
+    if remove:
+        for f in file_names:
+            os.remove(f)
 
     output_file = os.path.join(output_dir, output_name)
-    df.to_csv(output_file)
+    df.to_csv(output_file, index=False)
     return output_file
 
-def filter_out_neutral(df: pd.DataFrame, outputfile: str):
-    new_df = df[df['label'] != Label.NEUTRAL]
-    new_df.to_csv(outputfile)
-    return outputfile
+def filter_out_neutral(data_file: str, output_file: str, remove: bool = True):
+    print(f"Filtering out neutral days from {output_file}")
+    og_df = pd.read_csv(data_file)
+    if remove:
+        os.remove(data_file)
+    new_df = og_df[og_df['label'] != Label.NEUTRAL]
+    new_df.to_csv(output_file, index=False)
+    return output_file
 
 
 
@@ -77,4 +86,4 @@ if __name__ == "__main__":
     # process_stock_csv(file_path, output_path)
     files = process_data_dir(data_path, output_path)
     merged_file = merge_stock_data(files, output_path, 'headline-data.csv')
-    filter_file = filter_out_neutral(pd.read_csv(merged_file), final_path)
+    filter_file = filter_out_neutral(merged_file, final_path)
