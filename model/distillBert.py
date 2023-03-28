@@ -185,7 +185,7 @@ class RobertaFineTuner:
                 except:
                     print("Got error in loss function, skipping data point.")
                     continue
-                
+
                 tr_loss += loss.item()
                 big_val, big_idx = torch.max(outputs.data, dim=1)
                 n_correct += calculate_accuracy(big_idx, targets)
@@ -253,7 +253,7 @@ def main():
 
     train_data_path = '../processed_stock_data/headline-data-filtered.csv'
     df = get_train_data(train_data_path)
-    SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit=100)
+    SPModel = RobertaFineTuner(model, loss_function, optimizer, df)
     EPOCHS = 1
     for epoch in range(EPOCHS):
         SPModel.train(epoch)
