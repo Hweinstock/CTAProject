@@ -179,7 +179,13 @@ class RobertaFineTuner:
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
                 targets = data['targets'].to(device, dtype=torch.long)
                 outputs = self.model(ids, mask, token_type_ids).squeeze()
-                loss = self.loss_function(outputs, targets)
+                # Got error on colab
+                try:
+                    loss = self.loss_function(outputs, targets)
+                except:
+                    print("Got error in loss function, skipping data point.")
+                    continue
+                
                 tr_loss += loss.item()
                 big_val, big_idx = torch.max(outputs.data, dim=1)
                 n_correct += calculate_accuracy(big_idx, targets)
@@ -247,7 +253,7 @@ def main():
 
     train_data_path = '../processed_stock_data/headline-data-filtered.csv'
     df = get_train_data(train_data_path)
-    SPModel = RobertaFineTuner(model, loss_function, optimizer, df)
+    SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit=100)
     EPOCHS = 1
     for epoch in range(EPOCHS):
         SPModel.train(epoch)
