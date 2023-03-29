@@ -254,7 +254,8 @@ def main():
     optimizer = torch.optim.Adam(params = model.parameters(), lr = LEARNING_RATE)
 
     train_data_path = '../processed_stock_data/headline-data-filtered.csv'
-    df = get_train_data(train_data_path)
+    tweet_data_path = '../data/processed_tweet_data/tweet-data-f.csv'
+    df = get_train_data(tweet_data_path)
     SPModel = RobertaFineTuner(model, loss_function, optimizer, df)
     EPOCHS = 1
     for epoch in range(EPOCHS):
