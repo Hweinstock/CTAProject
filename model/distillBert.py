@@ -25,7 +25,7 @@ class HeadlineData(Dataset):
     def __init__(self, dataframe, tokenizer, max_len):
         self.tokenizer = tokenizer 
         self.data = dataframe
-        self.text = dataframe.title 
+        self.text = dataframe.text 
         self.targets = dataframe.label
         self.max_len = max_len
 
