@@ -7,7 +7,7 @@ from config.logger import RootLogger
 from config.load_env import MIN_ARTICLES
 from stock_data import get_stock_data
 
-def download_data(start_date: datetime, end_date: datetime, output_dir: str = 'data/raw_stock_data/'):
+def download_data(start_date: datetime, end_date: datetime, output_dir: str = 'data/raw_headline_data/'):
     """
     Download all articles from Benzinga
     Parse unique stock tags. 

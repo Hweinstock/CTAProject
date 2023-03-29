@@ -1,9 +1,4 @@
-data/**
-raw_stock_data/**
-processed_stock_data/**
 *.DS_Store
 venv/**
 .env
 *__pycache__
-!processed_stock_data/headline-data.csv
-!processed_stock_data/headline-data-filtered.csv
