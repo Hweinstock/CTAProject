@@ -18,7 +18,7 @@ tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', trunc
 
 def get_train_data(train_data_path):
     train_data = pd.read_csv(train_data_path)
-    new_df = train_data[["title", "label"]]
+    new_df = train_data[["text", "label"]]
     return new_df
 
 class HeadlineData(Dataset):

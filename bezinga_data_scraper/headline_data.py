@@ -39,4 +39,4 @@ def download_data(start_date: datetime, end_date: datetime, output_dir: str = 'd
             continue 
 
         combined_df = pd.merge(stock_articles, stock_df, on="date").drop_duplicates()
-        combined_df.to_csv(os.path.join(output_dir, f'{cur_stock}-data.csv'))
+        combined_df.to_csv(os.path.join(output_dir, f'{cur_stock}-data.csv'), index=False)

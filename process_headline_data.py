@@ -11,12 +11,11 @@ if __name__ == "__main__":
     file_level = 3
     RootLogger.initialize('/config/', console_level, file_level)
 
-    data_path = "data/raw_stock_data/"
+    data_path = "data/raw_headline_data/"
 
-    output_path = "data/processed_stock_data/"
+    output_path = "data/processed_headline_data/"
     final_path = os.path.join(output_path, 'headline-data-filtered.csv')
 
-    # process_stock_csv(file_path, output_path)
     files = process_data_dir(data_path, output_path)
     merged_file = merge_stock_data(files, output_path, 'headline-data.csv')
     filter_file = filter_out_neutral(merged_file, final_path)

@@ -124,12 +124,14 @@ def process_stock_csv(path: str, output_path: str) -> str:
         df[col].replace('', np.nan, inplace=True)
     df.dropna(inplace=True)
 
+    if 'title' in df.columns:
+        df.rename(columns={'title':'text'}, inplace=True)
+
     filename = os.path.basename(path)
     outputfile = os.path.join(output_path, filename)
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-    
     df.to_csv(outputfile, index=False)
     return outputfile
 
