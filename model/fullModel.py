@@ -7,12 +7,11 @@ from tqdm import tqdm
 from typing import Tuple
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, f1_score, recall_score, classification_report
 
+from args import get_model_args
+
 # code taken from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
-MAX_LEN = 256
-TRAIN_BATCH_SIZE = 10 
-VALID_BATCH_SIZE = 4 
-LEARNING_RATE = 1e-05
+MAX_LEN = 256 
 HISTORICAL_DELTA = 5
 
 device = 'cuda' if cuda.is_available() else 'cpu'
@@ -90,10 +89,13 @@ class RobertaFineTuner:
 
     def __init__(self, model: torch.nn.Module, 
                  loss_function, optimizer, data_source: pd.DataFrame, 
+                 train_batch_size: int, test_batch_size: int, 
                  data_limit: None or int = None):
         self.model = model 
         self.loss_function = loss_function 
         self.optimizer = optimizer
+        self.train_batch_size = train_batch_size
+        self.test_batch_size = test_batch_size
         if data_limit is not None:
             data_source = data_source.head(data_limit)
         self.training_loader, self.testing_loader = self.initialize_dataloaders(data_source)
@@ -115,13 +117,13 @@ class RobertaFineTuner:
         print(f"Test Dataset: {test_data.shape}")
 
         train_params = {
-            'batch_size': TRAIN_BATCH_SIZE, 
+            'batch_size': self.train_batch_size, 
             'shuffle': True, 
             'num_workers': 0
         }
 
         test_params = {
-            'batch_size': VALID_BATCH_SIZE, 
+            'batch_size': self.test_batch_size, 
             'shuffle': True, 
             'num_workers': 0
         }
@@ -254,19 +256,27 @@ def calculate_accuracy(preds, targets):
     return n_correct
 
 def main():
-
-    model = RobertaClass(False) 
+    args = get_model_args()
+    model = RobertaClass(args.freeze_model) 
     model.to(device)
 
     loss_function = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(params = model.parameters(), lr = LEARNING_RATE)
-
-    headline_data_path = '../data/processed_headline_data/headline-data.csv'
-    tweet_data_path = '../data/processed_tweet_data/tweet-data-f.csv'
-    df = get_train_data(headline_data_path)
-    SPModel = RobertaFineTuner(model, loss_function, optimizer, df)
-    EPOCHS = 1
-    for epoch in range(EPOCHS):
+    optimizer = torch.optim.Adam(params = model.parameters(), lr = args.learning_rate)
+    if args.data_source == 'tweet':
+        data_path = '../data/processed_tweet_data/tweet-data-f.csv'
+    else:
+        data_path = '../data/processed_headline_data/headline-data.csv'
+    df = get_train_data(data_path)
+    if args.data_limit is None:
+        SPModel = RobertaFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
+                                   data_source=df, 
+                                   train_batch_size= args.train_batch_size, test_batch_size =args.test_batch_size)
+    else:
+        SPModel = RobertaFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
+                                   data_source=df, 
+                                   train_batch_size= args.train_batch_size, test_batch_size =args.test_batch_size, 
+                                   data_limit=args.data_limit)
+    for epoch in range(args.epochs):
         SPModel.train(epoch)
 
     acc = SPModel.valid()
