@@ -227,7 +227,7 @@ class RobertaFineTuner:
         epoch_conf_matrix = confusion_matrix(true_values, predicted_values, labels=[0, 1, 2])
         epoch_loss = tr_loss / nb_tr_steps 
         epoch_accu = accuracy_score(true_values, predicted_values)
-        epoch_f1 = f1_score(true_values, predicted_values)
+        epoch_f1 = f1_score(true_values, predicted_values, average="micro")
         epoch_prec = precision_score(true_values, predicted_values)
         epoch_recall = recall_score(true_values, predicted_values)
 
