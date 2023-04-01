@@ -265,7 +265,7 @@ def main():
     if args.data_source == 'tweet':
         data_path = '../data/processed_tweet_data/tweet-data-f.csv'
     else:
-        data_path = '../data/processed_headline_data/headline-data.csv'
+        data_path = '../data/processed_headline_data/<=2022-03-01.csv'
     df = get_train_data(data_path)
     if args.data_limit is None:
         SPModel = RobertaFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
