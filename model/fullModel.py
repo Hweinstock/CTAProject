@@ -228,8 +228,8 @@ class RobertaFineTuner:
         epoch_loss = tr_loss / nb_tr_steps 
         epoch_accu = accuracy_score(true_values, predicted_values)
         epoch_f1 = f1_score(true_values, predicted_values, average="micro")
-        epoch_prec = precision_score(true_values, predicted_values)
-        epoch_recall = recall_score(true_values, predicted_values)
+        epoch_prec = precision_score(true_values, predicted_values, average="micro")
+        epoch_recall = recall_score(true_values, predicted_values, average="micro")
 
         print(classification_report(true_values, predicted_values))
         print(f"Validation Loss Epoch: {epoch_loss}")
