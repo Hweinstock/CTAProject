@@ -4,3 +4,4 @@ venv/**
 *__pycache__
 data/raw_headline_data/**
 data/raw_tweet_data/**
+backtrader-code/orcl-1995-2014.txt
