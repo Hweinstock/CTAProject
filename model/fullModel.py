@@ -224,7 +224,7 @@ class RobertaFineTuner:
                     accu_step = (n_correct*100) / nb_tr_examples 
                     print(f"Validation Loss per 100 steps: {loss_step}")
                     print(f"Validation Accuracy per 100 steps: {accu_step}")
-        epoch_conf_matrix = confusion_matrix(true_values, predicted_values, label=[0, 1, 2])
+        epoch_conf_matrix = confusion_matrix(true_values, predicted_values, labels=[0, 1, 2])
         epoch_loss = tr_loss / nb_tr_steps 
         epoch_accu = accuracy_score(true_values, predicted_values)
         epoch_f1 = f1_score(true_values, predicted_values)
