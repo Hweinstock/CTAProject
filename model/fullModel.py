@@ -110,7 +110,7 @@ class RobertaFineTuner:
         data_source_neutral = data_source[data_source['label'] == 2]
 
         print(f"Full Dataset: {data_source.shape}")
-        print(f"\t Positive cases: {data_source_pos.shape}, Negative cases: {data_source_neg.shape}, ")
+        print(f"\t Positive cases: {data_source_pos.shape}, Negative cases: {data_source_neg.shape}, Neutral cases: {data_source_neutral.shape}")
         print(f"Train Dataset: {train_data.shape}")
         print(f"Test Dataset: {test_data.shape}")
 
