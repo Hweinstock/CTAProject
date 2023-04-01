@@ -12,22 +12,27 @@ MAX_LEN = 256
 TRAIN_BATCH_SIZE = 10 
 VALID_BATCH_SIZE = 4 
 LEARNING_RATE = 1e-05
+HISTORICAL_DELTA = 5
 
 device = 'cuda' if cuda.is_available() else 'cpu'
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', truncation=True, do_lower_case=True)
 
+def get_historical_headers():
+    return [f"{i}_past_close" for i in range(1, HISTORICAL_DELTA+1)]
+
 def get_train_data(train_data_path):
     train_data = pd.read_csv(train_data_path)
-    new_df = train_data[["text", "label"]]
-    return new_df
+    return train_data
 
 class HeadlineData(Dataset):
     def __init__(self, dataframe, tokenizer, max_len):
+        print(dataframe.columns)
         self.tokenizer = tokenizer 
         self.data = dataframe
         self.text = dataframe.text 
         self.targets = dataframe.label
         self.max_len = max_len
+        self.historical_data = dataframe[get_historical_headers()]
 
     def __len__(self):
         return len(self.text)
@@ -47,13 +52,14 @@ class HeadlineData(Dataset):
         ids = inputs['input_ids']
         mask = inputs['attention_mask']
         token_type_ids = inputs["token_type_ids"]
-
+        stock_data = self.historical_data.iloc[[index]].values.flatten().tolist()
 
         return {
             'ids': torch.tensor(ids, dtype=torch.long),
             'mask': torch.tensor(mask, dtype=torch.long),
             'token_type_ids': torch.tensor(token_type_ids, dtype=torch.long),
-            'targets': torch.tensor(self.targets[index], dtype=torch.float)
+            'targets': torch.tensor(self.targets[index], dtype=torch.float), 
+            'stock_data': torch.tensor(stock_data, dtype=torch.float),
         }
     
 class RobertaClass(torch.nn.Module):
@@ -62,18 +68,21 @@ class RobertaClass(torch.nn.Module):
         self.ll = DistilBertModel.from_pretrained('distilbert-base-uncased')
         if freeze_roberta:
             self.ll.requires_grad_(False)
-        self.pre_classifier = torch.nn.Linear(768, 768)
-        self.dropout = torch.nn.Dropout(0.3)
-        self.classifier = torch.nn.Linear(768, 2)
+        self.pre_classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, 768 + HISTORICAL_DELTA)
+
+        #self.dropout = torch.nn.Dropout(0.3)
+        self.classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, 2)
     
-    def forward(self, input_ids, attention_mask, token_type_ids):
+    def forward(self, input_ids, attention_mask, token_type_ids, historical_data):
         output_1 = self.ll(input_ids=input_ids, 
                            attention_mask=attention_mask)
         hidden_state = output_1[0]
         pooler = hidden_state[:, 0]
+        # Add historical data to the layer. 
+        pooler = torch.cat((pooler, historical_data), 1)
         pooler = self.pre_classifier(pooler)
         pooler = torch.nn.ReLU()(pooler)
-        pooler = self.dropout(pooler)
+        #pooler = self.dropout(pooler)
         output = self.classifier(pooler)
         return output
 
@@ -135,8 +144,9 @@ class RobertaFineTuner:
             mask = data['mask'].to(device, dtype=torch.long)
             token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
             targets = data['targets'].to(device, dtype = torch.long)
+            historical_data = data['stock_data'].to(device, dtype=torch.long)
 
-            outputs = self.model(ids, mask, token_type_ids)
+            outputs = self.model(ids, mask, token_type_ids, historical_data)
             loss = self.loss_function(outputs, targets)
             tr_loss += loss.item()
             big_val, big_idx = torch.max(outputs.data, dim=1)
@@ -182,7 +192,8 @@ class RobertaFineTuner:
                 mask = data['mask'].to(device, dtype = torch.long)
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
                 targets = data['targets'].to(device, dtype=torch.long)
-                outputs = self.model(ids, mask, token_type_ids).squeeze()
+                historical_data = data['stock_data'].to(device, dtype=torch.long)
+                outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
                 # Got error on colab
                 try:
                     loss = self.loss_function(outputs, targets)
@@ -257,10 +268,10 @@ def main():
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params = model.parameters(), lr = LEARNING_RATE)
 
-    train_data_path = '../processed_stock_data/headline-data-filtered.csv'
+    headline_data_path = '../processed_stock_data/headline-data-filtered.csv'
     tweet_data_path = '../data/processed_tweet_data/tweet-data-f.csv'
     df = get_train_data(tweet_data_path)
-    SPModel = RobertaFineTuner(model, loss_function, optimizer, df)
+    SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit=5000)
     EPOCHS = 1
     for epoch in range(EPOCHS):
         SPModel.train(epoch)
