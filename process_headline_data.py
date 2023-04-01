@@ -18,4 +18,4 @@ if __name__ == "__main__":
 
     files = process_data_dir(data_path, output_path)
     merged_file = merge_stock_data(files, output_path, 'headline-data.csv')
-    filter_file = filter_out_neutral(merged_file, final_path)
+    filter_file = filter_out_neutral(merged_file, final_path, remove=False)

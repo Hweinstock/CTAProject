@@ -5,6 +5,7 @@ from torch import cuda
 import pandas as pd 
 from tqdm import tqdm
 from typing import Tuple
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, f1_score, recall_score, classification_report
 
 # code taken from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
@@ -26,7 +27,6 @@ def get_train_data(train_data_path):
 
 class HeadlineData(Dataset):
     def __init__(self, dataframe, tokenizer, max_len):
-        print(dataframe.columns)
         self.tokenizer = tokenizer 
         self.data = dataframe
         self.text = dataframe.text 
@@ -71,7 +71,7 @@ class RobertaClass(torch.nn.Module):
         self.pre_classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, 768 + HISTORICAL_DELTA)
 
         #self.dropout = torch.nn.Dropout(0.3)
-        self.classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, 2)
+        self.classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, 3)
     
     def forward(self, input_ids, attention_mask, token_type_ids, historical_data):
         output_1 = self.ll(input_ids=input_ids, 
@@ -186,6 +186,9 @@ class RobertaFineTuner:
         tr_loss = 0
         nb_tr_steps = 0 
         nb_tr_examples= 0 
+
+        true_values = []
+        predicted_values = []
         with torch.no_grad():
             for _, data in tqdm(enumerate(self.testing_loader, 0), total=len(self.testing_loader)):
                 ids = data['ids'].to(device, dtype = torch.long)
@@ -210,42 +213,31 @@ class RobertaFineTuner:
                 
                 # Track false negatives/false positives to look at precision and recall. 
                 confidence, choices = torch.max(outputs, 1)
+
                 for index, choice in enumerate(choices):
                     label = targets[index]
-                    
-                    if label.item() == 0 and choice.item() == 0:
-                        true_negatives += 1
-                    if label.item() == 1 and choice.item() == 1:
-                        true_positives += 1
-                    if label.item() == 1 and choice.item() == 0:
-                        false_negatives += 1
-                    if label.item() == 0 and choice.item() == 1:
-                        false_positives += 1
+                    true_values.append(label.item())
+                    predicted_values.append(choice.item())
 
                 if _% 5000 == 0:
                     loss_step = tr_loss / nb_tr_steps 
                     accu_step = (n_correct*100) / nb_tr_examples 
                     print(f"Validation Loss per 100 steps: {loss_step}")
                     print(f"Validation Accuracy per 100 steps: {accu_step}")
+        epoch_conf_matrix = confusion_matrix(true_values, predicted_values, label=[0, 1, 2])
         epoch_loss = tr_loss / nb_tr_steps 
-        epoch_accu = (n_correct*100) / nb_tr_examples 
-        epoch_f1 = (2*true_positives) / (2*true_positives +  false_positives + false_negatives)
-        try:
-            epoch_prec = true_positives / (true_positives + false_positives)
-            epoch_recall = true_positives / (true_positives + false_negatives)
-        except ZeroDivisionError:
-            epoch_prec = 0
-            epoch_recall = 0
-            print(f"true positives: {true_positives}")
-            print(f"true negatives: {true_negatives}")
-            print(f"false positives: {false_positives}")
-            print(f"false negatives: {false_negatives}")
+        epoch_accu = accuracy_score(true_values, predicted_values)
+        epoch_f1 = f1_score(true_values, predicted_values)
+        epoch_prec = precision_score(true_values, predicted_values)
+        epoch_recall = recall_score(true_values, predicted_values)
 
+        print(classification_report(true_values, predicted_values))
         print(f"Validation Loss Epoch: {epoch_loss}")
         print(f"Validation Accuracy Epoch: {epoch_accu}")
         print(f"Validation Precision Epoch: {epoch_prec}")
         print(f"Validation Recall Epoch: {epoch_recall}")
         print(f"F1 score: {epoch_f1}")
+        print(epoch_conf_matrix)
 
         return epoch_accu
     
@@ -268,10 +260,10 @@ def main():
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params = model.parameters(), lr = LEARNING_RATE)
 
-    headline_data_path = '../processed_stock_data/headline-data-filtered.csv'
+    headline_data_path = '../data/processed_headline_data/headline-data.csv'
     tweet_data_path = '../data/processed_tweet_data/tweet-data-f.csv'
-    df = get_train_data(tweet_data_path)
-    SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit=5000)
+    df = get_train_data(headline_data_path)
+    SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit=1000)
     EPOCHS = 1
     for epoch in range(EPOCHS):
         SPModel.train(epoch)

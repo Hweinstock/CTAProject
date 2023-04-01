@@ -13,14 +13,15 @@ apt-get install -y software-properties-common && \
 apt-get install -y python3 && \ 
 apt-get install -y python3-pip
 
-RUN \
-pip install yfinance && \
-pip install benzinga && \
-pip install python-dotenv && \ 
-pip install colorama && \
-pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu && \
-pip install colorama && \
-pip install transformers
+RUN pip install -r requirements.txt
+# RUN \
+# pip install yfinance && \
+# pip install benzinga && \
+# pip install python-dotenv && \ 
+# pip install colorama && \
+# pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu && \
+# pip install colorama && \
+# pip install transformers
 
 WORKDIR /project/
 
