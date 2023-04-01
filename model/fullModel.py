@@ -279,12 +279,12 @@ def main():
     for epoch in range(args.epochs):
         SPModel.train(epoch)
 
-    acc = SPModel.valid()
-    print("Accuracy on test data = %0.2f%%" % acc)
+        acc = SPModel.valid()
+        print("Accuracy on test data = %0.2f%%" % acc)
 
-    output_model_file = 'pytorch_roberta_sentiment.bin'
-    output_vocab_file = './'
-    SPModel.save_model(output_model_file, output_vocab_file)
+        output_model_file = 'pytorch_roberta_sentiment.bin'
+        output_vocab_file = './'
+        SPModel.save_model(output_model_file, output_vocab_file)
 
 if __name__ == '__main__':
     main()
