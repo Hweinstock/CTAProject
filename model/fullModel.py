@@ -264,7 +264,7 @@ def main():
     headline_data_path = '../data/processed_headline_data/headline-data.csv'
     tweet_data_path = '../data/processed_tweet_data/tweet-data-f.csv'
     df = get_train_data(headline_data_path)
-    SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit=1000)
+    SPModel = RobertaFineTuner(model, loss_function, optimizer, df, data_limit)
     EPOCHS = 1
     for epoch in range(EPOCHS):
         SPModel.train(epoch)
