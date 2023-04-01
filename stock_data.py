@@ -3,7 +3,7 @@ import yfinance as yf
 import pandas as pd
 from enum import IntEnum 
 import os 
-from typing import List
+from typing import List, Tuple
 from tqdm import tqdm
 import numpy as np
 
@@ -153,3 +153,32 @@ def process_data_dir(dir_path: str, output_path: str) -> List[str]:
         output_files.append(filename)
     RootLogger.log_info(f"Exporting files to {output_path}")
     return output_files
+
+def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, remove: bool = False) -> Tuple[str, str]:
+    """Read in a pandas df from csv and write two csv: one before a date, one after. 
+
+    Args:
+        data_path (str): original path to .csv
+        target_date (datetime): date to split on. 
+        output_dir (str): where to write generated .csv files.
+        remove (bool): delete original file if true.  
+
+    Returns:
+        Tuple[str, str]: pair of filepath to newly written files. 
+    """
+    RootLogger.log_info(f"Splitting dataframe {data_path} based on {target_date.strftime(DATE_FORMAT)}")
+    orig_df = pd.read_csv(data_path)
+    
+    df_before = orig_df.loc[pd.to_datetime(orig_df['date']) <= target_date]
+    df_after = orig_df.loc[pd.to_datetime(orig_df['date']) > target_date]
+
+    if remove:
+        os.remove(data_path)
+        
+    before_filepath = os.path.join(output_dir, f"<={target_date.strftime(DATE_FORMAT)}.csv")
+    after_filepath = os.path.join(output_dir, f">{target_date.strftime(DATE_FORMAT)}.csv")
+
+    df_before.to_csv(before_filepath, index=False)
+    df_after.to_csv(after_filepath, index=False)
+
+    return before_filepath, after_filepath
