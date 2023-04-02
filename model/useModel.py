@@ -63,10 +63,13 @@ class ModelPredictor:
 if __name__ == '__main__':
     model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
     datapath = '../data/processed_headline_data/>2022-03-01.csv'
-    data_source = pd.read_csv(datapath)
+    data_source = pd.read_csv(datapath).head(30)
     predictor = ModelPredictor(model)
-    res = predictor.evaluate(data_source=data_source.head(30))
-    print(res)
+    res = predictor.evaluate(data_source=data_source)
+    
+    output = pd.DataFrame([data_source['data'].tolist(), res[0], res[1]], columns=['date', 'pred_label', 'confidence'])
+    print(output)
+    
 
 
 
