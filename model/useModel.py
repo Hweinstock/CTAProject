@@ -37,12 +37,13 @@ class ModelPredictor:
                 ids = data['ids'].to(device, dtype = torch.long)
                 mask = data['mask'].to(device, dtype = torch.long)
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
-                targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
+                target = data['targets'].to(device, dtype=torch.long) # We don't use these. 
                 historical_data = data['stock_data'].to(device, dtype=torch.long)
                 outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
-                confidence, choices = torch.max(outputs, 1)
-                predictions.append(choices.item())
-                true_values.append(targets.item())
+                confidence, choice = torch.max(outputs, 0)
+                print(outputs, choice)
+                predictions.append(choice.item())
+                true_values.append(target.item())
                 confidence_values.append(confidence.item())
 
         print(classification_report(true_values, predictions))
