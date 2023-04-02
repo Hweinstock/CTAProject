@@ -32,17 +32,17 @@ class ModelPredictor:
         data_loader = self.initialize_dataloaders(data_source)
         predictions = []
         true_values = []
-        with torch.no_grad():
-            for _, data in tqdm(enumerate(data_loader, 0), total=len(data_loader)):
-                ids = data['ids'].to(device, dtype = torch.long)
-                mask = data['mask'].to(device, dtype = torch.long)
-                token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
-                targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
-                historical_data = data['stock_data'].to(device, dtype=torch.long)
-                outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
+        # with torch.no_grad():
+        for _, data in tqdm(enumerate(data_loader, 0), total=len(data_loader)):
+            ids = data['ids'].to(device, dtype = torch.long)
+            mask = data['mask'].to(device, dtype = torch.long)
+            token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
+            targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
+            historical_data = data['stock_data'].to(device, dtype=torch.long)
+            outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
 
-                predictions.append(outputs.item())
-                true_values.append(targets.item())
+            predictions.append(outputs.item())
+            true_values.append(targets.item())
 
         print(classification_report(true_values, predictions))
         return predictions
