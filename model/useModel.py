@@ -5,7 +5,7 @@ from tqdm import tqdm
 from sklearn.metrics import classification_report
 import torch 
 import pandas as pd
-from typing import List
+from typing import List, Tuple
 
 #model = torch.load('3labelmodel')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -27,10 +27,11 @@ class ModelPredictor:
 
         return data_loader 
     
-    def evaluate(self, data_source) -> List[int]:
+    def evaluate(self, data_source) -> Tuple[List[int], List[float]]:
         data_loader = self.initialize_dataloaders(data_source)
         predictions = []
         true_values = []
+        confidence_values = []
         with torch.no_grad():
             for _, data in tqdm(enumerate(data_loader, 0), total=len(data_loader)):
                 ids = data['ids'].to(device, dtype = torch.long)
@@ -39,13 +40,13 @@ class ModelPredictor:
                 targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
                 historical_data = data['stock_data'].to(device, dtype=torch.long)
                 outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
-                print('outputs', outputs)
-                print('targets', targets)
-                predictions.append(outputs.item())
+                confidence, choices = torch.max(outputs, 1)
+                predictions.append(choices.item())
                 true_values.append(targets.item())
+                confidence_values.append(confidence.item())
 
         print(classification_report(true_values, predictions))
-        return predictions
+        return predictions, confidence_values
  
 if __name__ == '__main__':
     model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
