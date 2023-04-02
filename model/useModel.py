@@ -67,7 +67,12 @@ if __name__ == '__main__':
     predictor = ModelPredictor(model)
     res = predictor.evaluate(data_source=data_source)
     
-    output = pd.DataFrame([data_source['date'].tolist(), res[0], res[1]], columns=['date', 'pred_label', 'confidence'])
+    raw_data = {
+        'date': data_source['date'].tolist(),
+        'pred_label': res[0],
+        'confidence': res[1],
+    }
+    output = pd.DataFrame(raw_data)
     print(output)
     
 
