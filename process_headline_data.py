@@ -2,7 +2,6 @@ import pandas as pd
 from typing import List
 from tqdm import tqdm 
 import os 
-from datetime import datetime
 from dateutil import parser
 
 from config.logger import RootLogger

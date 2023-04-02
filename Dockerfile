@@ -13,7 +13,6 @@ apt-get install -y software-properties-common && \
 apt-get install -y python3 && \ 
 apt-get install -y python3-pip
 
-RUN pip install -r requirements.txt
 # RUN \
 # pip install yfinance && \
 # pip install benzinga && \
@@ -23,5 +22,14 @@ RUN pip install -r requirements.txt
 # pip install colorama && \
 # pip install transformers
 
-WORKDIR /project/
+RUN \ 
+pip install python-dotenv==1.0.0 && \
+pip install torch==1.13.1 && \
+pip install yfinance==0.2.12 && \
+pip install benzinga==1.21 && \
+pip install transformers==4.27.3 && \
+pip install colorama==0.4.6 && \
+pip install scikit-learn==1.2.2 && \
+pip install backtrader==1.9.76.123
 
+WORKDIR /project/

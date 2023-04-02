@@ -33,6 +33,10 @@ def add_model_arguments(parser: argparse.ArgumentParser) -> None:
                                   type=str,
                                   help="source of data")
     
+    model_parameters.add_argument('-o', "--output_dir", type=str, 
+                                  help="path to where model should be saved.", 
+                                  default='.')
+    
     
 
 def add_logging_arguments(parser: argparse.ArgumentParser) -> None:

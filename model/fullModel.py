@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 from typing import Tuple
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, f1_score, recall_score, classification_report
-
+import os
 from args import get_model_args
 
 # code taken from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
@@ -178,10 +178,6 @@ class RobertaFineTuner:
 
     def valid(self):
         self.model.eval()
-        true_positives = 0 
-        true_negatives = 0
-        false_positives = 0 
-        false_negatives = 0
 
         n_correct = 0
         n_wrong = 0
@@ -244,13 +240,6 @@ class RobertaFineTuner:
 
         return epoch_accu
     
-    def save_model(self, model_path: str, vocab_path: str):
-
-        torch.save(self.model, model_path)
-        tokenizer.save_vocabulary(vocab_path)
-
-        print('All files saved')
-    
 def calculate_accuracy(preds, targets):
     n_correct = (preds == targets).sum().item()
     return n_correct
@@ -282,9 +271,10 @@ def main():
         acc = SPModel.valid()
         print("Accuracy on test data = %0.2f%%" % acc)
 
-        output_model_file = 'pytorch_roberta_sentiment.bin'
-        output_vocab_file = './'
-        SPModel.save_model(output_model_file, output_vocab_file)
+        output_model_file = f'model_weights_{epoch}'
+        SPModel.save(SPModel.state_dict(), os.path.join(args.output_dir, output_model_file))
+        print("all files saved.")
+
 
 if __name__ == '__main__':
     main()
