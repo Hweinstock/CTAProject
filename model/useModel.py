@@ -33,14 +33,14 @@ class ModelPredictor:
         true_values = []
         with torch.no_grad():
             for _, data in tqdm(enumerate(data_loader, 0), total=len(data_loader)):
-                print(data)
                 ids = data['ids'].to(device, dtype = torch.long)
                 mask = data['mask'].to(device, dtype = torch.long)
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
                 targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
                 historical_data = data['stock_data'].to(device, dtype=torch.long)
                 outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
-
+                print('outputs', outputs)
+                print('targets', targets)
                 predictions.append(outputs.item())
                 true_values.append(targets.item())
 
