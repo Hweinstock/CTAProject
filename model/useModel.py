@@ -48,6 +48,12 @@ class ModelPredictor:
         # print(classification_report(true_values, predictions))
         # return predictions
  
+if __name__ == '__main__':
+    model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
+    datapath = '../data/processed_headline_data/>2022-03-01.csv'
+    datasource = pd.read_csv(datapath)
+    predictor = ModelPredictor(model)
+
 
 
 
