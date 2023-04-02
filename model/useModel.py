@@ -65,7 +65,7 @@ if __name__ == '__main__':
     datapath = '../data/processed_headline_data/>2022-03-01.csv'
     data_source = pd.read_csv(datapath)
     predictor = ModelPredictor(model)
-    res = predictor.evaluate(data_source=data_source)
+    res = predictor.evaluate(data_source=data_source.head(30))
     print(res)
 
 
