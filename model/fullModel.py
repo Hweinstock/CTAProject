@@ -257,22 +257,22 @@ def main():
         data_path = '../data/processed_headline_data/<=2022-03-01.csv'
     df = get_train_data(data_path)
     if args.data_limit is None:
-        SPModel = RobertaFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
+        ModelTrainer = RobertaFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
                                    data_source=df, 
                                    train_batch_size= args.train_batch_size, test_batch_size =args.test_batch_size)
     else:
-        SPModel = RobertaFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
+        ModelTrainer = RobertaFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
                                    data_source=df, 
                                    train_batch_size= args.train_batch_size, test_batch_size =args.test_batch_size, 
                                    data_limit=args.data_limit)
     for epoch in range(args.epochs):
-        SPModel.train(epoch)
+        ModelTrainer.train(epoch)
 
-        acc = SPModel.valid()
+        acc = ModelTrainer.valid()
         print("Accuracy on test data = %0.2f%%" % acc)
 
         output_model_file = f'model_weights_{epoch}'
-        torch.save(SPModel.state_dict(), os.path.join(args.output_dir, output_model_file))
+        torch.save(model.state_dict(), os.path.join(args.output_dir, output_model_file))
         print("all files saved.")
 
 
