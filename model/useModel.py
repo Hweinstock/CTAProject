@@ -28,7 +28,7 @@ class ModelPredictor:
         return data_loader 
     
     def evaluate(self) -> List[int]:
-        
+        pass
         # data_loader = self.initialize_dataloaders(data_source)
         # predictions = []
         # true_values = []
