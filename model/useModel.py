@@ -5,6 +5,7 @@ from tqdm import tqdm
 from sklearn.metrics import classification_report
 import torch 
 import pandas as pd
+from typing import List
 
 #model = torch.load('3labelmodel')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -26,15 +27,13 @@ class ModelPredictor:
 
         return data_loader 
     
-    def evaluate(self, data_source: pd.DataFrame) -> pd.DataFrame:
+    def evaluate(self, data_source: pd.DataFrame) -> List[int]:
         
         data_loader = self.initialize_dataloaders(data_source)
         predictions = []
         true_values = []
         with torch.no_grad():
             for _, data in tqdm(enumerate(data_loader, 0), total=len(data_loader)):
-                print(data)
-                date = data['date']
                 ids = data['ids'].to(device, dtype = torch.long)
                 mask = data['mask'].to(device, dtype = torch.long)
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
@@ -45,10 +44,9 @@ class ModelPredictor:
                 predictions.append(outputs.item())
                 true_values.append(targets.item())
 
-                predictions.append(date, outputs.item())
         print(classification_report(true_values, predictions))
-        results = pd.DataFrame(predictions, columns=['date', 'pred_label'])
-        return results 
+        return predictions
+ 
 
 
 
