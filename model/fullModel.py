@@ -272,7 +272,7 @@ def main():
         print("Accuracy on test data = %0.2f%%" % acc)
 
         output_model_file = f'model_weights_{epoch}'
-        SPModel.save(SPModel.state_dict(), os.path.join(args.output_dir, output_model_file))
+        torch.save(SPModel.state_dict(), os.path.join(args.output_dir, output_model_file))
         print("all files saved.")
 
 
