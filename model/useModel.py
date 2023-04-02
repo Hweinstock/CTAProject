@@ -14,7 +14,8 @@ tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', trunc
 class ModelPredictor:
 
     def __init__(self, model: torch.nn.Module):
-        self.model = model 
+        self.model = model
+        self.batch_size = 10
         self.data_loader = None
     
     def initialize_dataloaders(self, data_source: pd.DataFrame):
@@ -23,7 +24,13 @@ class ModelPredictor:
 
         dataset = HeadlineData(data_source, tokenizer, MAX_LEN)
 
-        data_loader = DataLoader(dataset)
+        eval_params = {
+            'batch_size': self.batch_size, 
+            'shuffle': True, 
+            'num_workers': 0
+        }
+
+        data_loader = DataLoader(dataset, **eval_params)
 
         return data_loader 
     
@@ -37,14 +44,18 @@ class ModelPredictor:
                 ids = data['ids'].to(device, dtype = torch.long)
                 mask = data['mask'].to(device, dtype = torch.long)
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
-                target = data['targets'].to(device, dtype=torch.long) # We don't use these. 
+                targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
                 historical_data = data['stock_data'].to(device, dtype=torch.long)
                 outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
-                confidence, choice = torch.max(outputs, 0)
-                print(outputs, choice)
-                predictions.append(choice.item())
-                true_values.append(target.item())
-                confidence_values.append(confidence.item())
+                confidence, choices = torch.max(outputs, 1)
+                for choice in choices:
+                    predictions.append(choice.item())
+
+                for target in targets:
+                    true_values.append(target.item())
+                
+                for confidence_val in confidence:
+                    confidence_values.append(confidence_val.item())
 
         print(classification_report(true_values, predictions))
         return predictions, confidence_values
