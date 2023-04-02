@@ -5,7 +5,7 @@ from tqdm import tqdm
 import torch 
 import pandas as pd
 
-model = torch.load('3labelmodel')
+#model = torch.load('3labelmodel')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', truncation=True, do_lower_case=True)
 
@@ -25,7 +25,7 @@ class ModelPredictor:
 
         return data_loader 
     
-    def evaluate(self, data_source: pd.DataFrame):
+    def evaluate(self, data_source: pd.DataFrame) -> pd.DataFrame:
         data_loader = self.initialize_dataloaders(data_source)
         predictions = []
         with torch.no_grad():
