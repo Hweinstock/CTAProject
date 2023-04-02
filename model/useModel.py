@@ -67,7 +67,7 @@ if __name__ == '__main__':
     predictor = ModelPredictor(model)
     res = predictor.evaluate(data_source=data_source)
     
-    output = pd.DataFrame([data_source['data'].tolist(), res[0], res[1]], columns=['date', 'pred_label', 'confidence'])
+    output = pd.DataFrame([data_source['date'].tolist(), res[0], res[1]], columns=['date', 'pred_label', 'confidence'])
     print(output)
     
 
