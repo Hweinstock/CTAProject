@@ -63,7 +63,7 @@ class ModelPredictor:
 if __name__ == '__main__':
     model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
     datapath = '../data/processed_headline_data/>2022-03-01.csv'
-    data_source = pd.read_csv(datapath).head(30)
+    data_source = pd.read_csv(datapath)
     predictor = ModelPredictor(model)
     res = predictor.evaluate(data_source=data_source)
     
@@ -73,7 +73,7 @@ if __name__ == '__main__':
         'confidence': res[1],
     }
     output = pd.DataFrame(raw_data)
-    print(output)
+    output.to_csv('predictions.csv')
     
 
 
