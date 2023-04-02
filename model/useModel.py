@@ -27,32 +27,33 @@ class ModelPredictor:
 
         return data_loader 
     
-    def evaluate(self) -> List[int]:
-        pass
-        # data_loader = self.initialize_dataloaders(data_source)
-        # predictions = []
-        # true_values = []
-        # with torch.no_grad():
-        #     for _, data in tqdm(enumerate(data_loader, 0), total=len(data_loader)):
-        #         print(data)
-        #         ids = data['ids'].to(device, dtype = torch.long)
-        #         mask = data['mask'].to(device, dtype = torch.long)
-        #         token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
-        #         targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
-        #         historical_data = data['stock_data'].to(device, dtype=torch.long)
-        #         outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
+    def evaluate(self, data_source) -> List[int]:
+        data_loader = self.initialize_dataloaders(data_source)
+        predictions = []
+        true_values = []
+        with torch.no_grad():
+            for _, data in tqdm(enumerate(data_loader, 0), total=len(data_loader)):
+                print(data)
+                ids = data['ids'].to(device, dtype = torch.long)
+                mask = data['mask'].to(device, dtype = torch.long)
+                token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
+                targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
+                historical_data = data['stock_data'].to(device, dtype=torch.long)
+                outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
 
-        #         predictions.append(outputs.item())
-        #         true_values.append(targets.item())
+                predictions.append(outputs.item())
+                true_values.append(targets.item())
 
-        # print(classification_report(true_values, predictions))
-        # return predictions
+        print(classification_report(true_values, predictions))
+        return predictions
  
 if __name__ == '__main__':
     model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
     datapath = '../data/processed_headline_data/>2022-03-01.csv'
-    datasource = pd.read_csv(datapath)
+    data_source = pd.read_csv(datapath)
     predictor = ModelPredictor(model)
+    res = predictor.evaluate(data_source=data_source)
+    print(res)
 
 
 
