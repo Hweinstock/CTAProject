@@ -2,6 +2,7 @@ from fullModel import RobertaClass, HeadlineData, MAX_LEN
 from transformers import DistilBertTokenizer
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from sklearn.metrics import classification_report
 import torch 
 import pandas as pd
 
@@ -28,6 +29,7 @@ class ModelPredictor:
     def evaluate(self, data_source: pd.DataFrame) -> pd.DataFrame:
         data_loader = self.initialize_dataloaders(data_source)
         predictions = []
+        true_values = []
         with torch.no_grad():
             for _, data in tqdm(enumerate(data_loader, 0), total=len(data_loader)):
                 date = data['date']
@@ -38,8 +40,11 @@ class ModelPredictor:
                 historical_data = data['stock_data'].to(device, dtype=torch.long)
                 outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
 
-                predictions.append(date, outputs.item())
+                predictions.append(outputs.item())
+                true_values.append(targets.item())
 
+                predictions.append(date, outputs.item())
+        print(classification_report(true_values, predictions))
         results = pd.DataFrame(predictions, columns=['date', 'pred_label'])
         return results 
 
