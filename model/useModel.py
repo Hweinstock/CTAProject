@@ -27,11 +27,13 @@ class ModelPredictor:
         return data_loader 
     
     def evaluate(self, data_source: pd.DataFrame) -> pd.DataFrame:
+        
         data_loader = self.initialize_dataloaders(data_source)
         predictions = []
         true_values = []
         with torch.no_grad():
             for _, data in tqdm(enumerate(data_loader, 0), total=len(data_loader)):
+                print(data)
                 date = data['date']
                 ids = data['ids'].to(device, dtype = torch.long)
                 mask = data['mask'].to(device, dtype = torch.long)
