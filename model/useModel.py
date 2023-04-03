@@ -61,7 +61,10 @@ class ModelPredictor:
         return predictions, confidence_values
  
 if __name__ == '__main__':
-    model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
+    if device != 'cuda':
+        model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
+    else:
+        model = torch.load('../../3labelstockmodel.bin')
     datapath = '../data/processed_headline_data/>2022-03-01.csv'
     data_source = pd.read_csv(datapath)
     predictor = ModelPredictor(model)
