@@ -72,6 +72,7 @@ if __name__ == '__main__':
     
     raw_data = {
         'date': data_source['date'].tolist(),
+        'stock': data_source['stock'].tolist(),
         'pred_label': res[0],
         'confidence': res[1],
     }
