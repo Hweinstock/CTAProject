@@ -75,6 +75,7 @@ if __name__ == '__main__':
         'stock': data_source['stock'].tolist(),
         'pred_label': res[0],
         'confidence': res[1],
+        'close': data_source['close'].tolist(),
     }
     output = pd.DataFrame(raw_data)
     output.to_csv('predictions.csv')
