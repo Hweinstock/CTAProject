@@ -55,7 +55,7 @@ def get_stock_data(stock_ticker: str, start_date: datetime, end_date: datetime, 
     raw_stock_data = yf.Ticker(stock_ticker).history(start=adjusted_start, 
                                                             end=adjusted_end)
     if raw:
-        stock_data = raw_stock_data[['Close', 'Volume']].reset_index().rename(str.lower, axis='columns')
+        stock_data = raw_stock_data[['Open', 'High', 'Low', 'Close', 'Volume']].reset_index().rename(str.lower, axis='columns')
     else:
         stock_data = raw_stock_data[['Close', 'Volume']].pct_change().reset_index().rename(str.lower, axis='columns')
 
