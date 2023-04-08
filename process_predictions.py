@@ -77,7 +77,7 @@ def add_stock_data(df: pd.DataFrame) -> pd.DataFrame:
     combined_df['stock'].fillna(stock_ticker, inplace=True)
     combined_df['pred_label'].fillna(-1, inplace=True)
     combined_df['confidence'].fillna(-1, inplace=True)
-    
+
     combined_df = pool_date_results(combined_df)
     return combined_df
 
@@ -89,15 +89,15 @@ if __name__ == '__main__':
     split_dfs = split_dataframe(df)
     res_df = add_stock_data(split_dfs[0])
 
-    # if not os.path.exists(export_path):
-    #     os.mkdir(export_path)
+    if not os.path.exists(export_path):
+        os.mkdir(export_path)
     
-    # for index, cur_df in tqdm(enumerate(split_dfs), total=len(split_dfs)):
-    #     res_df = add_stock_data(cur_df)
-    #     stock = res_df['stock'].iloc[0]
-    #     res_df = res_df.drop('stock', axis=1)
-    #     filepath = os.path.join(export_path, f"{stock}_predictions.csv")
-    #     res_df.to_csv(filepath, index=False)
+    for index, cur_df in tqdm(enumerate(split_dfs), total=len(split_dfs)):
+        res_df = add_stock_data(cur_df)
+        stock = res_df['stock'].iloc[0]
+        res_df = res_df.drop('stock', axis=1)
+        filepath = os.path.join(export_path, f"{stock}_predictions.csv")
+        res_df.to_csv(filepath, index=False)
 
 
 
