@@ -35,7 +35,7 @@ def determine_label(val: float) -> Label:
 
     return Label.NEUTRAL
 
-def get_stock_data(stock_ticker: str, start_date: datetime, end_date: datetime) -> pd.DataFrame:
+def get_stock_data(stock_ticker: str, start_date: datetime, end_date: datetime, raw: bool = False) -> pd.DataFrame:
     """
 
     Args:
@@ -54,8 +54,11 @@ def get_stock_data(stock_ticker: str, start_date: datetime, end_date: datetime) 
 
     raw_stock_data = yf.Ticker(stock_ticker).history(start=adjusted_start, 
                                                             end=adjusted_end)
-    
-    stock_data = raw_stock_data[['Close', 'Volume']].pct_change().reset_index().rename(str.lower, axis='columns')
+    if raw:
+        stock_data = raw_stock_data[['Close', 'Volume']].reset_index().rename(str.lower, axis='columns')
+    else:
+        stock_data = raw_stock_data[['Close', 'Volume']].pct_change().reset_index().rename(str.lower, axis='columns')
+
     for window in range(1, STOCK_PRICE_LAG+1):
         stock_data[f'{window}_past_close'] = stock_data['close'].shift(window)
     
