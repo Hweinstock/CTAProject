@@ -44,7 +44,6 @@ def pool_date_results(df: pd.DataFrame) -> pd.DataFrame:
                 new_row['confidence'] = -1*diff
             df = df[df['date'] != date].reset_index(drop=True)
             df.loc[len(df)] = new_row
-    print(len(df), len(unique_dates))
     return df
 
 def add_stock_data(df: pd.DataFrame) -> pd.DataFrame:
