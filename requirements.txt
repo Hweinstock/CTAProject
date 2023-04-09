@@ -5,4 +5,4 @@ benzinga==1.21
 transformers==4.27.3
 colorama==0.4.6
 scikit-learn==1.2.2
-backtrader==1.9.76.123
+Backtesting==0.3.3
