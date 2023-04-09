@@ -78,6 +78,10 @@ def add_stock_data(df: pd.DataFrame) -> pd.DataFrame:
     combined_df['confidence'].fillna(-1, inplace=True)
 
     combined_df = pool_date_results(combined_df)
+
+    # Pooling messes up the index, so reset it. 
+    combined_df.sort_values(by='date', inplace=True)
+    combined_df.reset_index(drop=True, inplace=True)
     return combined_df
 
 if __name__ == '__main__':
@@ -86,7 +90,7 @@ if __name__ == '__main__':
 
     df = pd.read_csv(predictions_path, index_col=[0])
     split_dfs = split_dataframe(df)
-    res_df = add_stock_data(split_dfs[0])
+    #res_df = add_stock_data(split_dfs[5])
 
     if not os.path.exists(export_path):
         os.mkdir(export_path)
