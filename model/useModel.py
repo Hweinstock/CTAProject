@@ -48,9 +48,10 @@ class ModelPredictor:
                 targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
                 historical_data = data['stock_data'].to(device, dtype=torch.long)
                 outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
+                print(outputs)
                 outputs = self.softmax(outputs)
+                print(outputs)
                 confidence, choices = torch.max(outputs, 1)
-                print(confidence)
                 for choice in choices:
                     predictions.append(choice.item())
 
