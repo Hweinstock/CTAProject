@@ -1,0 +1,8 @@
+python-dotenv==1.0.0
+torch==1.13.1
+yfinance==0.2.12
+benzinga==1.21
+transformers==4.27.3
+colorama==0.4.6
+scikit-learn==1.2.2
+Backtesting==0.3.3
