@@ -67,10 +67,10 @@ class RobertaClass(torch.nn.Module):
         self.ll = DistilBertModel.from_pretrained('distilbert-base-uncased')
         if freeze_roberta:
             self.ll.requires_grad_(False)
-        self.pre_classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, 768 + HISTORICAL_DELTA)
-
+        self.pre_classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, int(768 + HISTORICAL_DELTA))
         #self.dropout = torch.nn.Dropout(0.3)
-        self.classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, 3)
+        self.classifier = torch.nn.Linear(int(768 + HISTORICAL_DELTA), 3)
+        self.ac_final = torch.nn.Softmax()
     
     def forward(self, input_ids, attention_mask, token_type_ids, historical_data):
         output_1 = self.ll(input_ids=input_ids, 
@@ -82,7 +82,7 @@ class RobertaClass(torch.nn.Module):
         pooler = self.pre_classifier(pooler)
         pooler = torch.nn.ReLU()(pooler)
         #pooler = self.dropout(pooler)
-        output = self.classifier(pooler)
+        output = self.ac_final(self.classifier(pooler))
         return output
 
 class RobertaFineTuner:
