@@ -9,8 +9,8 @@ def order_size_from_confidence(conf: float) -> int:
     confidence_map = {
     (0.0, 0.25): 1, 
     (0.25, 0.5): 2, 
-    (0.5, 0.75): 3, 
-    (0.75, 1.00): 4,
+    (0.5, 0.75): 4, 
+    (0.75, 1.00): 8,
     }
     
     for key, value in confidence_map.items():
