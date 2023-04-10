@@ -25,23 +25,33 @@ def split_dataframe(df: pd.DataFrame) -> List[pd.DataFrame]:
     return dfs
 
 def pool_date_results(df: pd.DataFrame) -> pd.DataFrame:
+
     unique_dates = df['date'].unique() 
     for date in unique_dates:
+    
         df_slice = df[df['date'] == date]
-        if len(df_slice) > 1:
+        entries_per_date = len(df_slice)
+        if entries_per_date > 1:
+            # If we have more than one entries in the df for this date. 
+            # Split into increasing and decreasing slices. 
             increasing_slice = df_slice[df_slice['pred_label'] == 0]
             decreasing_slice = df_slice[df_slice['pred_label'] == 1]
             increasing_confidence = increasing_slice['confidence'].sum()
             decreasing_confidence = decreasing_slice['confidence'].sum()
             
+            # pool these together and take the confidence majority. 
+            # That is, take label of maximum confidence. 
             new_row = df_slice.iloc[0].copy()
+
             diff = increasing_confidence - decreasing_confidence
             if diff > 0:
                 new_row['pred_label'] = 0
-                new_row['confidence'] = diff
+                new_row['confidence'] = diff / entries_per_date
             else:
                 new_row['pred_label'] = 1
-                new_row['confidence'] = -1*diff
+                new_row['confidence'] = (-1*diff) / entries_per_date
+
+            # Re-insert this new row into the dataframe to replace our old entry. 
             df = df[df['date'] != date].reset_index(drop=True)
             df.loc[len(df)] = new_row
     return df
