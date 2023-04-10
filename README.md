@@ -11,3 +11,9 @@ run the docker
 `docker-compose run --rm cta`
 In the data_tools dir:
 `python3 main.py`
+
+Some papers we use:
+[TinyBert](https://arxiv.org/abs/2110.01518)
+[DistillBert](https://arxiv.org/abs/1910.01108)
+[Stock Movement Prediction From Tweets and Historical Prices](https://homepages.inf.ed.ac.uk/scohen/acl18stock.pdf)
+
