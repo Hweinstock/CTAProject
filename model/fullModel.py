@@ -67,9 +67,9 @@ class RobertaClass(torch.nn.Module):
         self.ll = DistilBertModel.from_pretrained('distilbert-base-uncased')
         if freeze_roberta:
             self.ll.requires_grad_(False)
-        self.pre_classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, int(768 + HISTORICAL_DELTA))
+        self.pre_classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, int((768 + HISTORICAL_DELTA) / 2))
         #self.dropout = torch.nn.Dropout(0.3)
-        self.classifier = torch.nn.Linear(int(768 + HISTORICAL_DELTA), 3)
+        self.classifier = torch.nn.Linear(int((768 + HISTORICAL_DELTA) / 2), 3)
         self.ac_final = torch.nn.Softmax()
     
     def forward(self, input_ids, attention_mask, token_type_ids, historical_data):
