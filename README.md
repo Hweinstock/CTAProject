@@ -23,4 +23,6 @@ This is the core paper that the model is generally based on.
 This paper gives examples of what learning rates work best. 
 - [Sharp Ratio](https://www.seputarforex.com/belajar/forex_ebook/download/mahir/The_Sharpe_Ratio.pdf)
 This paper outlines the modern method for evaluating trading strategies taking into account both risk and return, where risk is defined relative to maximum drawdown (MD). 
+- [Review of Deep Learning in Stock Prediction](https://arxiv.org/abs/2003.01859)  
+This paper outlines the different techniquess used and outlines some critical general strategies such as feature selection, PCA to reduce data redundancy, feature testing, and common evaluation techniques. 
 
