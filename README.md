@@ -25,4 +25,5 @@ This paper gives examples of what learning rates work best.
 This paper outlines the modern method for evaluating trading strategies taking into account both risk and return, where risk is defined relative to maximum drawdown (MD). 
 - [Review of Deep Learning in Stock Prediction](https://arxiv.org/abs/2003.01859)  
 This paper outlines the different techniquess used and outlines some critical general strategies such as feature selection, PCA to reduce data redundancy, feature testing, and common evaluation techniques. 
-
+- [NLP in finance forecasting] (https://link.springer.com/article/10.1007/s10462-017-9588-9)
+This paper gives an overview of techniques used in the field and the emmerging techniques as well. It suggests general flows for financial forecasting as well as outlines common data sources and their effects. 
