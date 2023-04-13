@@ -21,4 +21,6 @@ This paper provides a smaller version of Bert to work with that rivals performan
 This is the core paper that the model is generally based on. 
 - [RoBERTa: A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/pdf/1907.11692.pdf)  
 This paper gives examples of what learning rates work best. 
+- [Sharp Ratio](https://www.seputarforex.com/belajar/forex_ebook/download/mahir/The_Sharpe_Ratio.pdf)
+This paper outlines the modern method for evaluating trading strategies taking into account both risk and return, where risk is defined relative to maximum drawdown (MD). 
 
