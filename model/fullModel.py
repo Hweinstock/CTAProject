@@ -15,7 +15,7 @@ MAX_LEN = 256
 HISTORICAL_DELTA = 5
 
 device = 'cuda' if cuda.is_available() else 'cpu'
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', truncation=True, do_lower_case=True)
+tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-cased', truncation=True, do_lower_case=True)
 
 def get_historical_headers():
     return [f"{i}_past_close" for i in range(1, HISTORICAL_DELTA+1)]
@@ -64,11 +64,11 @@ class HeadlineData(Dataset):
 class RobertaClass(torch.nn.Module):
     def __init__(self, freeze_roberta=False):
         super(RobertaClass, self).__init__()
-        self.ll = DistilBertModel.from_pretrained('distilbert-base-uncased')
+        self.ll = DistilBertModel.from_pretrained('distilbert-base-cased')
         if freeze_roberta:
             self.ll.requires_grad_(False)
         self.pre_classifier = torch.nn.Linear(768 + HISTORICAL_DELTA, int((768 + HISTORICAL_DELTA) / 2))
-        #self.dropout = torch.nn.Dropout(0.3)
+        self.dropout = torch.nn.Dropout(0.3)
         self.classifier = torch.nn.Linear(int((768 + HISTORICAL_DELTA) / 2), 3)
         self.ac_final = torch.nn.Softmax()
     
@@ -81,7 +81,7 @@ class RobertaClass(torch.nn.Module):
         pooler = torch.cat((pooler, historical_data), 1)
         pooler = self.pre_classifier(pooler)
         pooler = torch.nn.ReLU()(pooler)
-        #pooler = self.dropout(pooler)
+        pooler = self.dropout(pooler)
         output = self.ac_final(self.classifier(pooler))
         return output
 
