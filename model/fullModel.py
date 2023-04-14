@@ -251,6 +251,7 @@ def main():
 
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params = model.parameters(), lr = args.learning_rate)
+    print(f"Running model with learning rate {args.learning_rate} and train batch size {args.train_batch_size}")
     if args.data_source == 'tweet':
         data_path = '../data/processed_tweet_data/tweet-data-f.csv'
     else:
