@@ -5,7 +5,7 @@ from tqdm import tqdm
 import numpy as np 
 
 from simpleStrategy import SimpleStrategy
-from analyzeResults import plot_against_baseline, report_columns
+from analyzeResults import plot_results, report_columns
 
 # 
 np.seterr(divide='ignore')
@@ -37,6 +37,6 @@ if __name__ == '__main__':
         cum_stats.append(parse_stats(stats))
 
     stats_df = pd.concat(cum_stats, axis=1).transpose()
-    plot_against_baseline(stats_df, 'test_plot')
+    plot_results(stats_df, 'newResults')
     report_columns(stats_df, ['Return [%]', 'Volatility (Ann.) [%]', '# Trades', 'Win Rate [%]'])
     stats_df.to_csv('strategy_stats.csv')

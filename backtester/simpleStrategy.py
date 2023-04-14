@@ -51,7 +51,6 @@ class SimpleStrategy(Strategy):
             conf = self.current_confidence()
             sell_size = order_size_from_confidence(conf)
             if sell_size == 0:
-                print(self.current_date(), self.current_confidence())
                 sell_size = 1
             t = self.sell(size=sell_size)
             self.log_order(t)
@@ -60,7 +59,6 @@ class SimpleStrategy(Strategy):
             conf = self.current_confidence()
             buy_size = order_size_from_confidence(conf)
             if buy_size == 0:
-                print(self.current_date(), self.current_confidence())
                 buy_size = 1
             t = self.buy(size=buy_size)
             self.log_order(t)        
