@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     start_date = datetime.strptime('2000-01-06', DATE_FORMAT)
     end_date = datetime.strptime('2023-03-09', DATE_FORMAT)
-    df = download_data(start_date, end_date, output_dir='data/raw_headline_data/')
+    download_data(start_date, end_date, output_dir='data/raw_headline_data/')
 
 
     
