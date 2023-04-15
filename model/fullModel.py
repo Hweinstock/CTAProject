@@ -21,7 +21,7 @@ def get_historical_headers():
     return [f"{i}_past_close" for i in range(1, HISTORICAL_DELTA+1)]
 
 def get_train_data(train_data_path):
-    train_data = pd.read_csv(train_data_path)
+    train_data = pd.read_csv(train_data_path, lineterminator='\n')
     return train_data
 
 class HeadlineData(Dataset):
