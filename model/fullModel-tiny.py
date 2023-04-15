@@ -1,4 +1,3 @@
-from transformers import BertTokenizer
 from torch.utils.data import Dataset, DataLoader
 from transformers import AutoModel, AutoTokenizer
 import torch
@@ -75,7 +74,7 @@ class RobertaClass(torch.nn.Module):
         self.pre_classifier = torch.nn.Linear(MODEL_EMBEDDING_SIZE + HISTORICAL_DELTA, middle_layer_size)
         self.dropout = torch.nn.Dropout(0.3)
         self.classifier = torch.nn.Linear(middle_layer_size, 3)
-        self.ac_final = torch.nn.Softmax()
+        self.ac_final = torch.nn.Softmax(dim=1)
     
     def forward(self, input_ids, attention_mask, token_type_ids, historical_data):
         output_1 = self.ll(input_ids=input_ids, 
@@ -83,12 +82,15 @@ class RobertaClass(torch.nn.Module):
                            attention_mask=attention_mask)
         hidden_state = output_1[0]
         pooler = hidden_state[:, 0]
+        # Apply softmax to output of BERT. 
+        pooler = self.ac_final(pooler)
         # Add historical data to the layer. 
         pooler = torch.cat((pooler, historical_data), 1)
         pooler = self.pre_classifier(pooler)
         pooler = torch.nn.ReLU()(pooler)
         pooler = self.dropout(pooler)
-        output = self.ac_final(self.classifier(pooler))
+        pooler = self.classifier(pooler)
+        output = self.ac_final(pooler)
         return output
 
 class RobertaFineTuner:
@@ -164,7 +166,7 @@ class RobertaFineTuner:
             nb_tr_steps += 1 
             nb_tr_examples += targets.size(0)
 
-            if _%5000==0:
+            if _%1000==999:
                 loss_step = tr_loss/nb_tr_steps 
                 accu_step = (n_correct*100)/nb_tr_examples 
                 print(f"Training Loss per 5000 steps:  {loss_step}")
@@ -177,8 +179,9 @@ class RobertaFineTuner:
         print(f'The Total Accuracy for Epoch {epoch}: {(n_correct*100)/nb_tr_examples}')
         epoch_loss = tr_loss/nb_tr_steps 
         epoch_accu = (n_correct*100)/nb_tr_examples
-        print(f"Training Loss Epoch: {epoch_loss}")
-        print(f"Training accuracy epoch: {epoch_accu}")
+        print(f"Training Loss Epoch {epoch}: {epoch_loss}")
+        print(f"Training accuracy Eepoch {epoch}: {epoch_accu}")
+        print("\n")
 
         return 
 
@@ -243,6 +246,7 @@ class RobertaFineTuner:
         print(f"Validation Recall Epoch: {epoch_recall}")
         print(f"F1 score: {epoch_f1}")
         print(epoch_conf_matrix)
+        print("\n")
 
         return epoch_accu
     

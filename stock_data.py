@@ -109,6 +109,9 @@ def filter_out_neutral(data_file: str, output_file: str, remove: bool = True) ->
     new_df.to_csv(output_file, index=False)
     return output_file
 
+def get_stock_historical_headers():
+    return [f"{i}_past_close" for i in range(1, STOCK_PRICE_LAG+1)]
+
 def process_stock_csv(path: str, output_path: str) -> str:
     """Process individual CSV file by adding label.  
 
@@ -122,8 +125,10 @@ def process_stock_csv(path: str, output_path: str) -> str:
     df = pd.read_csv(path, lineterminator='\n')
 
     df['label'] = df['next_close'].apply(determine_label)
+
     for col in df.columns:
         df[col].replace('', np.nan, inplace=True)
+
     df.dropna(inplace=True)
 
     if 'title' in df.columns:
@@ -131,6 +136,10 @@ def process_stock_csv(path: str, output_path: str) -> str:
 
     filename = os.path.basename(path)
     outputfile = os.path.join(output_path, filename)
+
+    # Normalize stock data to 0-1 range. 
+    for col in get_stock_historical_headers():
+        df[col] = (df[col] / 2.0) + 0.5
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
