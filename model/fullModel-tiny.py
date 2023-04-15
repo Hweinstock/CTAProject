@@ -8,6 +8,7 @@ from typing import Tuple
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, f1_score, recall_score, classification_report
 import os
 from args import get_model_args
+from typing import Dict
 
 # code taken from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
@@ -146,51 +147,54 @@ class RobertaFineTuner:
 
     def train(self, epoch: int):
         tr_loss = 0
-        n_correct = 0 
         nb_tr_steps = 0
         nb_tr_examples = 0
+        true_values = [] 
+        predicted_values = []
         self.model.train()
         for _, data in tqdm(enumerate(self.training_loader, 0), total=len(self.training_loader)):
+            # Input data for the model
             ids = data['ids'].to(device, dtype=torch.long)
             mask = data['mask'].to(device, dtype=torch.long)
             token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
             targets = data['targets'].to(device, dtype = torch.long)
             historical_data = data['stock_data'].to(device, dtype=torch.long)
 
-            outputs = self.model(ids, mask, token_type_ids, historical_data)
+            # Pass through, compute loss. 
+            outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
             loss = self.loss_function(outputs, targets)
             tr_loss += loss.item()
-            big_val, big_idx = torch.max(outputs.data, dim=1)
-            n_correct += calculate_accuracy(big_idx, targets)
+            confidence_values, choices = torch.max(outputs.data, dim=1)
+
+            # Add predictions and results to lists. 
+            for index, choice in enumerate(choices):
+                label = targets[index]
+                true_values.append(label.item())
+                predicted_values.append(choice.item())
 
             nb_tr_steps += 1 
             nb_tr_examples += targets.size(0)
 
             if _%1000==999:
                 loss_step = tr_loss/nb_tr_steps 
-                accu_step = (n_correct*100)/nb_tr_examples 
-                print(f"Training Loss per 5000 steps:  {loss_step}")
-                print(f"Training Accuracy per 5000 steps: {accu_step}")
+                accu_step = accuracy_score(true_values, predicted_values) * 100
+                print(f"Training Loss per 1000 steps:  {loss_step}")
+                print(f"Training Accuracy per 1000 steps: {accu_step}")
             
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-        
-        print(f'The Total Accuracy for Epoch {epoch}: {(n_correct*100)/nb_tr_examples}')
+        epoch_accu = accuracy_score(true_values, predicted_values)
+        print(f'The Total Accuracy for Epoch {epoch}: {epoch_accu * 100}')
         epoch_loss = tr_loss/nb_tr_steps 
-        epoch_accu = (n_correct*100)/nb_tr_examples
         print(f"Training Loss Epoch {epoch}: {epoch_loss}")
-        print(f"Training accuracy Eepoch {epoch}: {epoch_accu}")
         print("\n")
 
         return 
 
-    def valid(self):
+    def valid(self, epoch: int):
         self.model.eval()
 
-        n_correct = 0
-        n_wrong = 0
-        total = 0
         tr_loss = 0
         nb_tr_steps = 0 
         nb_tr_examples= 0 
@@ -199,13 +203,15 @@ class RobertaFineTuner:
         predicted_values = []
         with torch.no_grad():
             for _, data in tqdm(enumerate(self.testing_loader, 0), total=len(self.testing_loader)):
+                # Define inputs to the model. 
                 ids = data['ids'].to(device, dtype = torch.long)
                 mask = data['mask'].to(device, dtype = torch.long)
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
                 targets = data['targets'].to(device, dtype=torch.long)
                 historical_data = data['stock_data'].to(device, dtype=torch.long)
                 outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
-                # Got error on colab
+
+                # Got error on colab so just skip if it happens. 
                 try:
                     loss = self.loss_function(outputs, targets)
                 except:
@@ -213,46 +219,56 @@ class RobertaFineTuner:
                     continue
 
                 tr_loss += loss.item()
-                big_val, big_idx = torch.max(outputs.data, dim=1)
-                n_correct += calculate_accuracy(big_idx, targets)
+                confidences, choices = torch.max(outputs, 1)
 
                 nb_tr_steps += 1
-                nb_tr_examples += targets.size(0)
-                
-                # Track false negatives/false positives to look at precision and recall. 
-                confidence, choices = torch.max(outputs, 1)
+                nb_tr_examples += targets.size(0) 
 
                 for index, choice in enumerate(choices):
                     label = targets[index]
                     true_values.append(label.item())
                     predicted_values.append(choice.item())
 
-                if _% 5000 == 0:
+                if _% 1000 == 999:
                     loss_step = tr_loss / nb_tr_steps 
-                    accu_step = (n_correct*100) / nb_tr_examples 
-                    print(f"Validation Loss per 100 steps: {loss_step}")
-                    print(f"Validation Accuracy per 100 steps: {accu_step}")
+                    accu_step = accuracy_score(true_values, predicted_values) * 100
+                    print(f"Validation Loss per 1000 steps: {loss_step}")
+                    print(f"Validation Accuracy per 1000 steps: {accu_step}")
+
         epoch_conf_matrix = confusion_matrix(true_values, predicted_values, labels=[0, 1, 2])
         epoch_loss = tr_loss / nb_tr_steps 
         epoch_accu = accuracy_score(true_values, predicted_values)
         epoch_f1 = f1_score(true_values, predicted_values, average="micro")
         epoch_prec = precision_score(true_values, predicted_values, average="micro")
         epoch_recall = recall_score(true_values, predicted_values, average="micro")
-
-        print(classification_report(true_values, predicted_values))
-        print(f"Validation Loss Epoch: {epoch_loss}")
-        print(f"Validation Accuracy Epoch: {epoch_accu}")
-        print(f"Validation Precision Epoch: {epoch_prec}")
-        print(f"Validation Recall Epoch: {epoch_recall}")
-        print(f"F1 score: {epoch_f1}")
+        labels = ['Increasing', 'Decreasing', 'Neutral']
+        report = classification_report(true_values, predicted_values, target_names=labels)
+        report_dict = report = classification_report(true_values, predicted_values, target_names=labels, output_dict=True)
+        print(report)
+        print(f"Validation Loss Epoch {epoch}: {epoch_loss}")
+        print(f"Validation Accuracy Epoch {epoch}: {epoch_accu}")
+        print(f"Validation Precision Epoch {epoch}: {epoch_prec}")
+        print(f"Validation Recall Epoch {epoch}: {epoch_recall}")
+        print(f"F1 score for epoch {epoch}: {epoch_f1}")
         print(epoch_conf_matrix)
         print("\n")
 
-        return epoch_accu
+        return report_dict
     
 def calculate_accuracy(preds, targets):
     n_correct = (preds == targets).sum().item()
     return n_correct
+
+def flatten_report(report: Dict[str, str or Dict[str, float]]):
+    labels = ['Increasing', 'Decreasing', 'Neutral', 'macro avg', 'weighted avg']
+    data = {}
+    for key, value in report.items():
+        if key in labels:
+            for subkey, subvalue in value.items():
+                data[f"{key}_{subkey}"] = subvalue
+        else:
+            data[key] = value 
+    return data
 
 def main():
     args = get_model_args()
@@ -275,16 +291,17 @@ def main():
                                    data_source=df, 
                                    train_batch_size= args.train_batch_size, test_batch_size =args.test_batch_size, 
                                    data_limit=args.data_limit)
+    training_data = []
     for epoch in range(args.epochs):
         ModelTrainer.train(epoch)
 
-        acc = ModelTrainer.valid()
-        print("Accuracy on test data = %0.2f%%" % acc)
+        report = ModelTrainer.valid(epoch)
+        training_data.append(flatten_report(report))
 
         output_model_file = f'model_weights_{epoch}'
         torch.save(model.state_dict(), os.path.join(args.output_dir, output_model_file))
         print("all files saved.")
 
-
+    pd.DataFrame(training_data).to_csv('training_data.csv')
 if __name__ == '__main__':
     main()
