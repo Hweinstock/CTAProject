@@ -6,6 +6,7 @@ import os
 from config.logger import RootLogger
 from config.load_env import MIN_ARTICLES, STOCK_PRICE_LAG
 from stock_data import get_stock_data
+from tqdm import tqdm
 
 def fill_in_missing_dates(stock_articles_df: pd.DataFrame) -> pd.DataFrame:
     stock_articles_df = stock_articles_df.groupby(by='date').agg({'title': lambda x: ".".join(x), 
@@ -20,20 +21,49 @@ def fill_in_missing_dates(stock_articles_df: pd.DataFrame) -> pd.DataFrame:
 
     return stock_articles_df
 
-def aggregate_day_k(stock_articles_df: pd.DataFrame, k: int) -> pd.DataFrame:
-    stock_articles_df['offset_text'] = stock_articles_df['text'].shift(k).fillna("")
+def aggregate_day_k(original_df: pd.DataFrame, stock_articles_df: pd.DataFrame, k: int) -> pd.DataFrame:
+    """Add text for day d-k to day d and return the resulting dataframe. 
+
+    We must pass in the original to avoid duplicate adding. 
+
+    Args:
+        original_df (pd.DataFrame): df before any text was modified. 
+        stock_articles_df (pd.DataFrame): df currently in modification
+        k (int): offset to add text
+
+    Returns:
+        pd.DataFrame: updated version of stock_articles_df with offset text added. 
+    """
+    stock_articles_df['offset_text'] = original_df['text'].shift(k).fillna("")
     stock_articles_df['text'] = stock_articles_df['offset_text'] + " " + stock_articles_df['text']
     stock_articles_df['text'] = stock_articles_df['text'].str.strip()
-    stock_articles_df.drop(columns=['offset_text'])
-    # stock_articles_df['text'] = offset + ". " + stock_articles_df['text'] if offset != '' else stock_articles_df['text']
+    stock_articles_df = stock_articles_df.drop(columns=['offset_text'])
     # Delete concatenations of empty strings. 
     stock_articles_df.loc[stock_articles_df['text'] == ' '] = ''
     return stock_articles_df
 
 def aggregate_delta_days(stock_articles_df: pd.DataFrame) -> pd.DataFrame:
+    """Comprise text from delta days together in the text field. 
+
+    Args:
+        stock_articles_df (pd.DataFrame): source df
+
+    Returns:
+        pd.DataFrame: output df
+    """
+    def adjust_text(text: str):
+        if text[0] != "\"":
+            text = "\"" + text 
+        if text[-1] != "\"":
+            text += "\""
+        return text
+
+
     stock_articles_df.rename(columns={'title':'text'}, inplace=True)
+    original_df = stock_articles_df.copy()
     for window in range(1, STOCK_PRICE_LAG+1):
-        stock_articles_df = aggregate_day_k(stock_articles_df, k=window)
+        stock_articles_df = aggregate_day_k(original_df, stock_articles_df, k=window)
+    #stock_articles_df['text'] = stock_articles_df['text'].apply(adjust_text)
     return stock_articles_df
 
 def download_data(start_date: datetime, end_date: datetime, output_dir: str = 'data/raw_headline_data/'):
@@ -52,7 +82,8 @@ def download_data(start_date: datetime, end_date: datetime, output_dir: str = 'd
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    for index, cur_stock in enumerate(unique_stocks):
+    RootLogger.log_info(f"Exporting indivdual stock headline data to directory {output_dir}")
+    for index, cur_stock in tqdm(enumerate(unique_stocks), total=len(unique_stocks)):
         RootLogger.log_debug(f"On index {index} of {len(unique_stocks)}.")
         stock_articles = articles_df[articles_df['stock'] == cur_stock]
 
@@ -73,7 +104,5 @@ def download_data(start_date: datetime, end_date: datetime, output_dir: str = 'd
             
         combined_df = pd.merge(stock_articles, stock_df, on="date").drop_duplicates()
         output_file = f'{cur_stock}-data.csv'
-        RootLogger.log_debug(f"Outputting data to {f'{cur_stock}-data.csv'}")
-        combined_df.to_csv(os.path.join(output_dir, f'{cur_stock}-data.csv'), index=False)
-
-        break 
+        RootLogger.log_debug(f"Outputting data to {output_file}")
+        combined_df.to_csv(os.path.join(output_dir, output_file), index=False) 

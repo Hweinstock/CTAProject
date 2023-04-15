@@ -82,7 +82,7 @@ def merge_stock_data(file_names: List[str], output_dir: str, output_name: str, r
     """
     output_file = os.path.join(output_dir, output_name)
     RootLogger.log_info(f"Merged stock data into {output_file}")
-    df = pd.concat((pd.read_csv(f) for f in file_names), ignore_index=True)
+    df = pd.concat((pd.read_csv(f, lineterminator='\n') for f in file_names), ignore_index=True)
     if remove:
         for f in file_names:
             os.remove(f)
@@ -102,7 +102,7 @@ def filter_out_neutral(data_file: str, output_file: str, remove: bool = True) ->
         str: filepath to new file. 
     """
     RootLogger.log_info(f"Filtering out neutral days from {output_file}")
-    og_df = pd.read_csv(data_file)
+    og_df = pd.read_csv(data_file, lineterminator='\n')
     if remove:
         os.remove(data_file)
     new_df = og_df[og_df['label'] != Label.NEUTRAL]
@@ -119,8 +119,7 @@ def process_stock_csv(path: str, output_path: str) -> str:
     Returns:
         str: filepath to new csv file. 
     """
-
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, lineterminator='\n')
 
     df['label'] = df['next_close'].apply(determine_label)
     for col in df.columns:
@@ -170,7 +169,7 @@ def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, r
         Tuple[str, str]: pair of filepath to newly written files. 
     """
     RootLogger.log_info(f"Splitting dataframe {data_path} based on {target_date.strftime(DATE_FORMAT)}")
-    orig_df = pd.read_csv(data_path)
+    orig_df = pd.read_csv(data_path, lineterminator='\n')
     
     df_before = orig_df.loc[pd.to_datetime(orig_df['date']) <= target_date]
     df_after = orig_df.loc[pd.to_datetime(orig_df['date']) > target_date]
