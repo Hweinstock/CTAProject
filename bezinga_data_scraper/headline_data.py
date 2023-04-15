@@ -4,7 +4,7 @@ from dateutil import parser
 import pandas as pd
 import os 
 from config.logger import RootLogger
-from config.load_env import MIN_ARTICLES, STOCK_PRICE_LAG
+from config.load_env import STOCK_PRICE_LAG
 from stock_data import get_stock_data
 from tqdm import tqdm
 
@@ -66,7 +66,7 @@ def aggregate_delta_days(stock_articles_df: pd.DataFrame) -> pd.DataFrame:
     #stock_articles_df['text'] = stock_articles_df['text'].apply(adjust_text)
     return stock_articles_df
 
-def download_data(start_date: datetime, end_date: datetime, output_dir: str = 'data/raw_headline_data/'):
+def download_data(start_date: datetime, end_date: datetime, article_count_cutoff: int, output_dir: str = 'data/raw_headline_data/'):
     """
     Download all articles from Benzinga
     Parse unique stock tags. 
@@ -83,18 +83,23 @@ def download_data(start_date: datetime, end_date: datetime, output_dir: str = 'd
         os.mkdir(output_dir)
 
     RootLogger.log_info(f"Exporting indivdual stock headline data to directory {output_dir}")
+    matching_stocks = 0
     for index, cur_stock in tqdm(enumerate(unique_stocks), total=len(unique_stocks)):
         RootLogger.log_debug(f"On index {index} of {len(unique_stocks)}.")
         stock_articles = articles_df[articles_df['stock'] == cur_stock]
 
-        if len(stock_articles.index) < MIN_ARTICLES:
+        if len(stock_articles.index) < article_count_cutoff:
             continue 
+
+        matching_stocks += 1
         
         stock_start_date = parser.parse(stock_articles.iloc[0]['date'])
         stock_end_date = parser.parse(stock_articles.iloc[-1]['date'])
 
         stock_articles = fill_in_missing_dates(stock_articles)
-        stock_articles = aggregate_delta_days(stock_articles)
+        agg_stock_articles = aggregate_delta_days(stock_articles)
+
+        assert len(stock_articles.index) == len(agg_stock_articles.index), "Aggregating articles causes decrease in dimension!"
 
         stock_df = get_stock_data(cur_stock, stock_start_date, stock_end_date)
 
@@ -102,7 +107,8 @@ def download_data(start_date: datetime, end_date: datetime, output_dir: str = 'd
             RootLogger.log_warning(f"yFinance failed to find data for {cur_stock}, skipping.")
             continue 
             
-        combined_df = pd.merge(stock_articles, stock_df, on="date").drop_duplicates()
+        combined_df = pd.merge(agg_stock_articles, stock_df, on="date").drop_duplicates()
         output_file = f'{cur_stock}-data.csv'
         RootLogger.log_debug(f"Outputting data to {output_file}")
         combined_df.to_csv(os.path.join(output_dir, output_file), index=False) 
+    RootLogger.log_info(f"Exported data for {matching_stocks} stocks to {output_dir}")

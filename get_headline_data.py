@@ -10,7 +10,7 @@ if __name__ == '__main__':
     args = get_headline_data_parameters()
     start_date = datetime.strptime(args.start_date, DATE_FORMAT)
     end_date = datetime.strptime(args.end_date, DATE_FORMAT)
-    download_data(start_date, end_date, output_dir=args.output_dir)
+    download_data(start_date, end_date, article_count_cutoff=args.minimum_count, output_dir=args.output_dir)
 
 
     

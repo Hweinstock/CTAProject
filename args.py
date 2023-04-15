@@ -17,6 +17,11 @@ def add_get_headline_parameters(parser: argparse.ArgumentParser) -> None:
                    help="YYYY-MM-DD format of what date the scraping should finish scraping from.", 
                    default='2023-03-09')
     
+    headline_parameters.add_argument("-c", "--minimum_count", type=int,
+                   help="cutoff value for # of articles to keep stock in dataset", 
+                   default=100)
+    
+    
     add_output_dir_argument(headline_parameters, 'data/raw_headline_data/')
     
 def add_process_headline_parameters(parser: argparse.ArgumentParser) -> None:
