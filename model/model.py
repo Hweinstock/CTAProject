@@ -5,11 +5,12 @@ from torch import cuda
 import pandas as pd 
 from tqdm import tqdm
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, f1_score, recall_score, classification_report
+from plotTrainingData import plot_training_data
 import os
 from args import get_model_args
 from typing import Dict, Tuple, Any
 
-# code taken from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
+# adapted from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
 MAX_LEN = 256 
 HISTORICAL_DELTA = 5
@@ -319,6 +320,8 @@ def main():
         torch.save(model.state_dict(), os.path.join(args.output_dir, output_model_file))
         print("all files saved.")
 
-    pd.DataFrame(training_data).to_csv('training_data.csv')
+    training_df = pd.DataFrame(training_data)
+    plot_training_data(training_df, args)
+    training_df.to_csv('training_data.csv')
 if __name__ == '__main__':
     main()
