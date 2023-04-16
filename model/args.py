@@ -11,6 +11,11 @@ def add_model_arguments(parser: argparse.ArgumentParser) -> None:
                    help="learning rate for model.", 
                    default=1e-05)
     
+    model_parameters.add_argument("-m", "--model_type", type=str, 
+                                  choices=['distill', 'tiny', 'small', 'medium'],
+                                  default='tiny', 
+                                  help='which version of BERT to use.')
+    
     model_parameters.add_argument("-trb", "--train_batch_size", type=int, 
                                   help="size of batches for training", 
                                   default=8)
