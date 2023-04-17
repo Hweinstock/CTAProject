@@ -63,7 +63,9 @@ class HeadlineData(Dataset):
             None,
             add_special_tokens=True,
             max_length=self.max_len,
-            pad_to_max_length=True,
+            #pad_to_max_length=True,
+            padding='max_length',
+            truncation=True,
             return_token_type_ids=True
         )
         ids = inputs['input_ids']
@@ -106,10 +108,12 @@ class RobertaClass(torch.nn.Module):
         pooler = self.ac_final(pooler)
         # Add historical data to the layer. 
         pooler = torch.cat((pooler, historical_data), 1)
+        # Feed to MLP
         pooler = self.pre_classifier(pooler)
         pooler = torch.nn.ReLU()(pooler)
         pooler = self.dropout(pooler)
         pooler = self.classifier(pooler)
+        # Apply softmax to final layer. 
         output = self.ac_final(pooler)
         return output
 
@@ -263,7 +267,8 @@ class RobertaFineTuner:
         epoch_prec = precision_score(true_values, predicted_values, average="micro")
         epoch_recall = recall_score(true_values, predicted_values, average="micro")
         labels = ['Increasing', 'Decreasing', 'Neutral']
-        report = classification_report(true_values, predicted_values, target_names=labels)
+        # This line throws an error if only labels 0-2 are present. 
+        report = classification_report(true_values, predicted_values, target_names=labels, labels=[0, 1, 2])
         report_dict = report = classification_report(true_values, predicted_values, target_names=labels, output_dict=True)
         print(report)
         print(f"Validation Loss Epoch {epoch}: {epoch_loss}")
