@@ -105,13 +105,13 @@ class RobertaClass(torch.nn.Module):
         hidden_state = output_1[0]
         pooler = hidden_state[:, 0]
         # Apply softmax to output of BERT. 
-        pooler = self.ac_final(pooler)
+        #pooler = self.ac_final(pooler)
         # Add historical data to the layer. 
         pooler = torch.cat((pooler, historical_data), 1)
         # Feed to MLP
         pooler = self.pre_classifier(pooler)
         pooler = torch.nn.ReLU()(pooler)
-        pooler = self.dropout(pooler)
+        #pooler = self.dropout(pooler)
         pooler = self.classifier(pooler)
         # Apply softmax to final layer. 
         output = self.ac_final(pooler)
@@ -123,13 +123,15 @@ class RobertaFineTuner:
                  loss_function, optimizer, data_source: pd.DataFrame, 
                  train_batch_size: int, test_batch_size: int, 
                  tokenizer,
-                 data_limit: None or int = None):
+                 data_limit: None or int = None, 
+                 testing: bool= False):
         self.model = model 
         self.loss_function = loss_function 
         self.optimizer = optimizer
         self.tokenizer = tokenizer
         self.train_batch_size = train_batch_size
         self.test_batch_size = test_batch_size
+        self.testing = testing
         if data_limit is not None:
             data_source = data_source.head(data_limit)
         self.training_loader, self.testing_loader = self.initialize_dataloaders(data_source)
@@ -166,8 +168,10 @@ class RobertaFineTuner:
         testing_set = HeadlineData(test_data, self.tokenizer, MAX_LEN)
 
         training_loader = DataLoader(training_set, **train_params)
-        testing_loader = DataLoader(testing_set, **test_params)
+        if self.testing:
+            train_params['shuffle'] = False
 
+        testing_loader = DataLoader(testing_set, **test_params)
         return training_loader, testing_loader
 
     def train(self, epoch: int):
@@ -176,8 +180,14 @@ class RobertaFineTuner:
         nb_tr_examples = 0
         true_values = [] 
         predicted_values = []
+        raw_predictions = []
         self.model.train()
-        for _, data in tqdm(enumerate(self.training_loader, 0), total=len(self.training_loader)):
+        if self.testing: 
+            loaded_data = enumerate(self.training_loader, 0)
+        else:
+            loaded_data = tqdm(enumerate(self.training_loader, 0), total=len(self.training_loader))
+
+        for _, data in loaded_data:
             # Input data for the model
             ids = data['ids'].to(device, dtype=torch.long)
             mask = data['mask'].to(device, dtype=torch.long)
@@ -186,7 +196,8 @@ class RobertaFineTuner:
             historical_data = data['stock_data'].to(device, dtype=torch.long)
 
             # Pass through, compute loss. 
-            outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
+            outputs = self.model(ids, mask, token_type_ids, historical_data)
+            raw_predictions.append(outputs)
             loss = self.loss_function(outputs, targets)
             tr_loss += loss.item()
             confidence_values, choices = torch.max(outputs.data, dim=1)
@@ -215,7 +226,7 @@ class RobertaFineTuner:
         print(f"Training Loss Epoch {epoch}: {epoch_loss}")
         print("\n")
 
-        return 
+        return raw_predictions, true_values
 
     def valid(self, epoch: int):
         self.model.eval()
@@ -226,15 +237,21 @@ class RobertaFineTuner:
 
         true_values = []
         predicted_values = []
+
+        if self.testing: 
+            loaded_data = enumerate(self.training_loader, 0)
+        else:
+            loaded_data = tqdm(enumerate(self.testing_loader, 0), total=len(self.testing_loader))
+
         with torch.no_grad():
-            for _, data in tqdm(enumerate(self.testing_loader, 0), total=len(self.testing_loader)):
+            for _, data in loaded_data:
                 # Define inputs to the model. 
                 ids = data['ids'].to(device, dtype = torch.long)
                 mask = data['mask'].to(device, dtype = torch.long)
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
                 targets = data['targets'].to(device, dtype=torch.long)
                 historical_data = data['stock_data'].to(device, dtype=torch.long)
-                outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
+                outputs = self.model(ids, mask, token_type_ids, historical_data)
 
                 # Got error on colab so just skip if it happens. 
                 try:
@@ -261,16 +278,20 @@ class RobertaFineTuner:
                     print(f"Validation Accuracy per 1000 steps: {accu_step}")
 
         epoch_conf_matrix = confusion_matrix(true_values, predicted_values, labels=[0, 1, 2])
-        print(true_values, predicted_values)
         epoch_loss = tr_loss / nb_tr_steps 
         epoch_accu = accuracy_score(true_values, predicted_values)
-        epoch_f1 = f1_score(true_values, predicted_values, average="micro")
-        epoch_prec = precision_score(true_values, predicted_values, average="micro")
-        epoch_recall = recall_score(true_values, predicted_values, average="micro")
+        epoch_f1 = f1_score(true_values, predicted_values, average="micro", zero_division=0)
+        epoch_prec = precision_score(true_values, predicted_values, average="micro", zero_division=0)
+        epoch_recall = recall_score(true_values, predicted_values, average="micro", zero_division=0)
         labels = ['Increasing', 'Decreasing', 'Neutral']
+
         # This line throws an error if only labels 0-2 are present. 
-        report = classification_report(true_values, predicted_values, target_names=labels, labels=[0, 1, 2])
-        report_dict = report = classification_report(true_values, predicted_values, target_names=labels, output_dict=True)
+        try: 
+            report = classification_report(true_values, predicted_values, target_names=labels, labels=[0, 1, 2], zero_division=0)
+            report_dict = classification_report(true_values, predicted_values, target_names=labels, output_dict=True, zero_division=0)
+        except ValueError:
+            report_dict = {}
+
         print(report)
         print(f"Validation Loss Epoch {epoch}: {epoch_loss}")
         print(f"Validation Accuracy Epoch {epoch}: {epoch_accu}")
@@ -280,7 +301,7 @@ class RobertaFineTuner:
         print(epoch_conf_matrix)
         print("\n")
 
-        return report_dict
+        return report_dict, epoch_accu
     
 def calculate_accuracy(preds, targets):
     n_correct = (preds == targets).sum().item()
@@ -319,7 +340,7 @@ def main():
     for epoch in range(args.epochs):
         ModelTrainer.train(epoch)
 
-        report = ModelTrainer.valid(epoch)
+        report, accu = ModelTrainer.valid(epoch)
         training_data.append(flatten_report(report))
 
         output_model_file = f'model_weights_{epoch}'
