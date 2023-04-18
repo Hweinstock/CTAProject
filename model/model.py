@@ -359,8 +359,9 @@ def main():
         training_data.append(flatten_report(report))
 
         print("Saving model...")
-        output_model_file = f'weights/model_weights_{epoch}.pt'
-        torch.save(model.state_dict(), os.path.join(args.output_dir, output_model_file))
+        model_str = f"{args.model_type}:{args.learning_rate}:{args.train_batch_size}"
+        output_model_file = f'{model_str}_{epoch}.pt'
+        torch.save(model.state_dict(), os.path.join(args.output_dir, 'weights/', output_model_file))
         print("Saving statistics...")
         training_df = pd.DataFrame(training_data)
         training_df.to_csv(stats_filename, index=False)
