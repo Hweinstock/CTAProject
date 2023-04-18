@@ -34,7 +34,13 @@ def get_model(id: str) -> Tuple[Any]:
             'medium': 512
         }
         return tokenizer, model, model_sizes[id]
-    
+
+def add_true_and_pred_values(new_choices, new_targets, true_values, predicted_values):
+    for index, choice in enumerate(new_choices):
+        label = new_targets[index]
+        true_values.append(label.item())
+        predicted_values.append(choice.item())
+
 def get_historical_headers():
     return [f"{i}_past_close" for i in range(1, HISTORICAL_DELTA+1)]
 
@@ -89,7 +95,7 @@ class RobertaClass(torch.nn.Module):
             self.ll.requires_grad_(False)
         middle_layer_size = int((model_embedding_size + HISTORICAL_DELTA) / 2)
         self.pre_classifier = torch.nn.Linear(model_embedding_size + HISTORICAL_DELTA, middle_layer_size)
-        self.dropout = torch.nn.Dropout(0.3)
+        self.dropout = torch.nn.Dropout(0.1)
         self.classifier = torch.nn.Linear(middle_layer_size, 3)
         self.ac_final = torch.nn.Softmax(dim=1)
         self.is_distill = is_distill
@@ -104,14 +110,12 @@ class RobertaClass(torch.nn.Module):
                             attention_mask=attention_mask)
         hidden_state = output_1[0]
         pooler = hidden_state[:, 0]
-        # Apply softmax to output of BERT. 
-        #pooler = self.ac_final(pooler)
         # Add historical data to the layer. 
         pooler = torch.cat((pooler, historical_data), 1)
         # Feed to MLP
         pooler = self.pre_classifier(pooler)
         pooler = torch.nn.ReLU()(pooler)
-        #pooler = self.dropout(pooler)
+        pooler = self.dropout(pooler)
         pooler = self.classifier(pooler)
         # Apply softmax to final layer. 
         output = self.ac_final(pooler)
@@ -132,6 +136,7 @@ class RobertaFineTuner:
         self.train_batch_size = train_batch_size
         self.test_batch_size = test_batch_size
         self.testing = testing
+
         if data_limit is not None:
             data_source = data_source.head(data_limit)
         self.training_loader, self.testing_loader = self.initialize_dataloaders(data_source)
@@ -168,10 +173,11 @@ class RobertaFineTuner:
         testing_set = HeadlineData(test_data, self.tokenizer, MAX_LEN)
 
         training_loader = DataLoader(training_set, **train_params)
+        testing_loader = DataLoader(testing_set, **test_params)
+
         if self.testing:
             train_params['shuffle'] = False
 
-        testing_loader = DataLoader(testing_set, **test_params)
         return training_loader, testing_loader
 
     def train(self, epoch: int):
@@ -180,8 +186,8 @@ class RobertaFineTuner:
         nb_tr_examples = 0
         true_values = [] 
         predicted_values = []
-        raw_predictions = []
         self.model.train()
+
         if self.testing: 
             loaded_data = enumerate(self.training_loader, 0)
         else:
@@ -197,16 +203,12 @@ class RobertaFineTuner:
 
             # Pass through, compute loss. 
             outputs = self.model(ids, mask, token_type_ids, historical_data)
-            raw_predictions.append(outputs)
             loss = self.loss_function(outputs, targets)
             tr_loss += loss.item()
             confidence_values, choices = torch.max(outputs.data, dim=1)
 
             # Add predictions and results to lists. 
-            for index, choice in enumerate(choices):
-                label = targets[index]
-                true_values.append(label.item())
-                predicted_values.append(choice.item())
+            add_true_and_pred_values(choices, targets, true_values, predicted_values)
 
             nb_tr_steps += 1 
             nb_tr_examples += targets.size(0)
@@ -216,17 +218,18 @@ class RobertaFineTuner:
                 accu_step = accuracy_score(true_values, predicted_values) * 100
                 print(f"Training Loss per 1000 steps:  {loss_step}")
                 print(f"Training Accuracy per 1000 steps: {accu_step}")
-            
+            # Perform backpropagation. 
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
         epoch_accu = accuracy_score(true_values, predicted_values)
         print(f'The Total Accuracy for Epoch {epoch}: {epoch_accu * 100}')
         epoch_loss = tr_loss/nb_tr_steps 
         print(f"Training Loss Epoch {epoch}: {epoch_loss}")
         print("\n")
 
-        return raw_predictions, true_values
+        return true_values
 
     def valid(self, epoch: int):
         self.model.eval()
@@ -266,10 +269,7 @@ class RobertaFineTuner:
                 nb_tr_steps += 1
                 nb_tr_examples += targets.size(0) 
 
-                for index, choice in enumerate(choices):
-                    label = targets[index]
-                    true_values.append(label.item())
-                    predicted_values.append(choice.item())
+                add_true_and_pred_values(choices, targets, true_values, predicted_values)
 
                 if _% 1000 == 999:
                     loss_step = tr_loss / nb_tr_steps 
@@ -288,7 +288,7 @@ class RobertaFineTuner:
         # This line throws an error if only labels 0-2 are present. 
         try: 
             report = classification_report(true_values, predicted_values, target_names=labels, labels=[0, 1, 2], zero_division=0)
-            report_dict = classification_report(true_values, predicted_values, target_names=labels, output_dict=True, zero_division=0)
+            report_dict = classification_report(true_values, predicted_values, target_names=labels, labels=[0, 1, 2], output_dict=True, zero_division=0)
         except ValueError:
             report_dict = {}
 
@@ -302,10 +302,6 @@ class RobertaFineTuner:
         print("\n")
 
         return report_dict, epoch_accu
-    
-def calculate_accuracy(preds, targets):
-    n_correct = (preds == targets).sum().item()
-    return n_correct
 
 def flatten_report(report: Dict[str, str or Dict[str, float]]):
     labels = ['Increasing', 'Decreasing', 'Neutral', 'macro avg', 'weighted avg']

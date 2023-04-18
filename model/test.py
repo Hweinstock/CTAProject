@@ -25,6 +25,7 @@ class TestModel(unittest.TestCase):
         """
         We check that on small batch (3 items), the accuracy increases over 50 epochs. 
         Subject to randomness, so we average over first 10 and last 10 and look for increase. 
+        Note that this test fails with small probability due to randomness in dropout. 
         """
         print("Testing the backpropagation...")
         disable_print()
@@ -59,6 +60,7 @@ class TestModel(unittest.TestCase):
         
         # Check that ending accuracy is greater than starting accuracy. 
         self.assertTrue(mean(start_accu) < mean(end_accu))
+        always_print(f"Accuracy went from {mean(start_accu)} to {mean(end_accu)}")
     
 if __name__ == '__main__':
     unittest.main()
