@@ -361,7 +361,12 @@ def main():
         print("Saving model...")
         model_str = f"{args.model_type}:{args.learning_rate}:{args.train_batch_size}"
         output_model_file = f'{model_str}_{epoch}.pt'
-        torch.save(model.state_dict(), os.path.join(args.output_dir, 'weights/', output_model_file))
+        weights_dir = os.path.join(args.output_dir, 'weights/')
+        
+        if not os.path.exists(weights_dir):
+            os.mkdir(weights_dir)
+            
+        torch.save(model.state_dict(), os.path.join(weights_dir, output_model_file))
         print("Saving statistics...")
         training_df = pd.DataFrame(training_data)
         training_df.to_csv(stats_filename, index=False)
