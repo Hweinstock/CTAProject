@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 def add_model_arguments(parser: argparse.ArgumentParser) -> None:
     model_parameters = parser.add_argument_group('model parameters')
@@ -42,7 +43,17 @@ def add_model_arguments(parser: argparse.ArgumentParser) -> None:
                                   help="path to where model should be saved.", 
                                   default='.')
     
+    model_parameters.add_argument('-w', "--starting_weights", type=str,
+                                  help="path to model weights file for model to start with. Note, must be of format: *_e where e is epoch #", 
+                                  default=None)
     
+    model_parameters.add_argument('-st', '--stats_filepath', type=str, 
+                                  help="path to training stats tracking csv, which we will append to",
+                                  default=None)
+    
+    model_parameters.add_argument('-sf', '--stats_filename', type=str, 
+                                  help="what to name training data csv that is exported.", 
+                                  default='training_data.csv')
 
 def add_logging_arguments(parser: argparse.ArgumentParser) -> None:
     logging_options = parser.add_argument_group('logging options')
@@ -56,4 +67,13 @@ def get_model_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__,
             formatter_class=argparse.RawDescriptionHelpFormatter)
     add_model_arguments(p)
+    args = p.parse_args()
+
+    if (args.starting_weights is None and args.stats_filepath is not None) or \
+       (args.starting_weights is not None and args.stats_filepath is None):
+        p.error("starting_weights and stat_file mututually required.")
+    
+    if (args.stats_filepath is not None and args.stats_filename != 'training_data.csv'):
+        p.error("stats_filepath already specified, can't set new name for file with stats_filename.")
+
     return p.parse_args()

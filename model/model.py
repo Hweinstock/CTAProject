@@ -34,6 +34,10 @@ def get_model(id: str) -> Tuple[Any]:
             'medium': 512
         }
         return tokenizer, model, model_sizes[id]
+    
+def parse_weights_file(filepath: str) -> Tuple[int, str]:
+    epoch = int(filepath.split("_")[-1].split(".")[0])
+    return epoch, filepath
 
 def add_true_and_pred_values(new_choices, new_targets, true_values, predicted_values):
     for index, choice in enumerate(new_choices):
@@ -304,7 +308,7 @@ class RobertaFineTuner:
         return report_dict, epoch_accu
 
 def flatten_report(report: Dict[str, str or Dict[str, float]]):
-    labels = ['Increasing', 'Decreasing', 'Neutral', 'macro avg', 'weighted avg']
+    labels = ['Increasing', 'Decreasing', 'Neutral', 'macro avg', 'micro avg', 'weighted avg']
     data = {}
     for key, value in report.items():
         if key in labels:
@@ -312,6 +316,9 @@ def flatten_report(report: Dict[str, str or Dict[str, float]]):
                 data[f"{key}_{subkey}"] = subvalue
         else:
             data[key] = value 
+    # In testing, we sometimes get accu = 0, in which case it isnt in the dict. 
+    if 'accuracy' not in data:
+        data['accuracy'] = 0.0
     return data
 
 def main():
@@ -320,9 +327,21 @@ def main():
     model = RobertaClass(model_source, model_embedding_size, is_distill=args.model_type == 'distill', freeze=args.freeze_model) 
     model.to(device)
 
+    # Load in existing weights if specified. 
+    if args.starting_weights is not None:
+        starting_epoch, weights = parse_weights_file(f'weights/{args.starting_weights}')
+        model.load_state_dict(torch.load(weights))
+        training_data = list(pd.read_csv(args.stats_filepath).T.to_dict().values())
+        stats_filename = args.stats_filepath
+    else:
+        starting_epoch = 0
+        training_data = []
+        stats_filename = args.stats_filename
+
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params = model.parameters(), lr = args.learning_rate)
     print(f"Running model with learning rate {args.learning_rate} and train batch size {args.train_batch_size}")
+
     if args.data_source == 'tweet':
         data_path = '../data/processed_tweet_data/tweet-data-f.csv'
     else:
@@ -332,19 +351,21 @@ def main():
                                 data_source=df, tokenizer=tokenizer,
                                 train_batch_size= args.train_batch_size, test_batch_size =args.test_batch_size, 
                                 data_limit=args.data_limit)
-    training_data = []
-    for epoch in range(args.epochs):
+    
+    for epoch in range(starting_epoch+1, args.epochs+starting_epoch+1):
         ModelTrainer.train(epoch)
 
         report, accu = ModelTrainer.valid(epoch)
         training_data.append(flatten_report(report))
 
-        output_model_file = f'model_weights_{epoch}'
+        print("Saving model...")
+        output_model_file = f'weights/model_weights_{epoch}.pt'
         torch.save(model.state_dict(), os.path.join(args.output_dir, output_model_file))
+        print("Saving statistics...")
+        training_df = pd.DataFrame(training_data)
+        training_df.to_csv(stats_filename, index=False)
         print("all files saved.")
 
-    training_df = pd.DataFrame(training_data)
     plot_training_data(training_df, args)
-    training_df.to_csv('training_data.csv')
 if __name__ == '__main__':
     main()

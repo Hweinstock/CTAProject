@@ -4,7 +4,6 @@ import seaborn as sns
 import argparse
 
 def plot_training_data(data: pd.DataFrame, args: argparse.Namespace = None):
-
     plot_data = data[['accuracy', 'macro avg_precision', 'macro avg_recall' ,'macro avg_f1-score',
                       'weighted avg_precision','weighted avg_recall','weighted avg_f1-score']]
     if args is not None:
