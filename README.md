@@ -27,3 +27,5 @@ This paper outlines the modern method for evaluating trading strategies taking i
 This paper outlines the different techniquess used and outlines some critical general strategies such as feature selection, PCA to reduce data redundancy, feature testing, and common evaluation techniques. 
 - [NLP in finance forecasting](https://link.springer.com/article/10.1007/s10462-017-9588-9)
 This paper gives an overview of techniques used in the field and the emmerging techniques as well. It suggests general flows for financial forecasting as well as outlines common data sources and their effects. 
+- [Use of Dropout Layers](https://arxiv.org/pdf/1207.0580.pdf)
+This paper introduces the idea of dropout layers which experimentally improve generalization by reducing overfitting. 
