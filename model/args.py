@@ -55,6 +55,10 @@ def add_model_arguments(parser: argparse.ArgumentParser) -> None:
                                   help="what to name training data csv that is exported.", 
                                   default='training_data.csv')
 
+    model_parameters.add_argument('-t', '--testing',
+                                  help='testing the model (runs train and test on same dataset)',
+                                  action='store_true')
+
 def add_logging_arguments(parser: argparse.ArgumentParser) -> None:
     logging_options = parser.add_argument_group('logging options')
     logging_options.add_argument("-v", "--verbosity", type=int, choices=[0,1,2,3], default=0,

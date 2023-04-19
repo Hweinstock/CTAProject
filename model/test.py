@@ -1,4 +1,4 @@
-from model import RobertaClass, get_model, get_train_data, RobertaFineTuner
+from model import ModelClass, get_model, get_train_data, ModelFineTuner
 import torch
 import unittest
 import io 
@@ -35,36 +35,36 @@ class TestModel(unittest.TestCase):
         # Can only run this with 'distill' on colab. 
         model_type = 'tiny'
         tokenizer, model_source, model_embedding_size = get_model(model_type)
-        model = RobertaClass(model_source, model_embedding_size, is_distill=model_type == 'distill', freeze=False) 
+        model = ModelClass(model_source, model_embedding_size, is_distill=model_type == 'distill', freeze=False) 
         model.to(device)
         loss_function = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(params = model.parameters(), lr = 1e-5)
         data_path = '../data/processed_headline_data/<=2022-03-01.csv'
         df = get_train_data(data_path)
-        ModelTrainer = RobertaFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
+        ModelTrainer = ModelFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
                                     data_source=df, tokenizer=tokenizer,
                                     train_batch_size=1, test_batch_size=1, 
                                     data_limit=3, testing=True)
         
-        start_accu = []
+        start_loss = []
         for i in tqdm(range(10)):
             raw_predictions, true_values = ModelTrainer.train(i)
-            res, accu = ModelTrainer.valid(i)
-            start_accu.append(accu)
+            res, loss = ModelTrainer.valid(i)
+            start_loss.append(loss)
 
         for i in tqdm(range(30)):
             raw_predictions, true_values = ModelTrainer.train(i)
-            res, accu = ModelTrainer.valid(i)
+            res, loss = ModelTrainer.valid(i)
         
-        end_accu = []
+        end_loss = []
         for i in tqdm(range(10)):
             raw_predictions, true_values = ModelTrainer.train(i)
-            res, accu = ModelTrainer.valid(i)
-            end_accu.append(accu)
+            res, loss = ModelTrainer.valid(i)
+            end_loss.append(loss)
         
         # Check that ending accuracy is greater than starting accuracy. 
-        self.assertTrue(mean(start_accu) < mean(end_accu))
-        always_print(f"Accuracy went from {mean(start_accu)} to {mean(end_accu)}")
+        self.assertTrue(mean(start_loss) > mean(end_loss))
+        always_print(f"Accuracy went from {mean(start_loss)} to {mean(end_loss)}")
     
 if __name__ == '__main__':
     unittest.main()

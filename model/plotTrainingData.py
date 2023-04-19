@@ -7,7 +7,7 @@ def plot_training_data(data: pd.DataFrame, args: argparse.Namespace = None):
     plot_data = data[['accuracy', 'macro avg_precision', 'macro avg_recall' ,'macro avg_f1-score',
                       'weighted avg_precision','weighted avg_recall','weighted avg_f1-score']]
     if args is not None:
-        title = f"{args.model_type}, Lr: {args.learning_rate}, trb: {args.train_batch_size}"
+        title = f"+{args.model_type}, Lr: {args.learning_rate}, trb: {args.train_batch_size}"
     else:
         title = 'Training Plot'
     
@@ -15,6 +15,19 @@ def plot_training_data(data: pd.DataFrame, args: argparse.Namespace = None):
     fig = sns.lineplot(data=plot_data, palette="tab10", linewidth=1.0)
     fig.set_title(title)
     fig.get_figure().savefig(title)
+    fig.get_figure().clf()
+
+def plot_loss_data(data: pd.DataFrame, args: argparse.Namespace = None):
+    plot_data2 = data[['loss']]
+    if args is not None:
+        title = f"+Loss:{args.model_type}, Lr: {args.learning_rate}, trb: {args.train_batch_size}"
+    else:
+        title = 'Training Plot'
+    sns.set_theme(style='darkgrid')
+    fig2 = sns.lineplot(data=plot_data2, palette='tab10', linewidth=2.0)
+    fig2.set_title(title)
+    fig2.get_figure().savefig(title)
+    fig2.get_figure().clf()
 
 if __name__ == '__main__':
     data_path = '../data/training_data.csv'

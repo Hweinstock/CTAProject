@@ -5,7 +5,7 @@ from torch import cuda
 import pandas as pd 
 from tqdm import tqdm
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, f1_score, recall_score, classification_report
-from plotTrainingData import plot_training_data
+from plotTrainingData import plot_training_data, plot_loss_data
 import os
 from args import get_model_args
 from typing import Dict, Tuple, Any
@@ -91,16 +91,22 @@ class HeadlineData(Dataset):
             'stock_data': torch.tensor(stock_data, dtype=torch.float),
         }
     
-class RobertaClass(torch.nn.Module):
+class ModelClass(torch.nn.Module):
     def __init__(self, model_source, model_embedding_size: int, is_distill: bool, freeze=False):
-        super(RobertaClass, self).__init__()
+        super(ModelClass, self).__init__()
         self.ll = model_source
         if freeze:
             self.ll.requires_grad_(False)
-        middle_layer_size = int((model_embedding_size + HISTORICAL_DELTA) / 2)
-        self.pre_classifier = torch.nn.Linear(model_embedding_size + HISTORICAL_DELTA, middle_layer_size)
-        self.dropout = torch.nn.Dropout(0.1)
-        self.classifier = torch.nn.Linear(middle_layer_size, 3)
+        middle_layer_size = int((model_embedding_size + HISTORICAL_DELTA) / 2.0)
+        second_middle_layer_size = int(middle_layer_size / 2.0)
+        # MLP
+        self.layer_1 = torch.nn.Linear(model_embedding_size + HISTORICAL_DELTA, middle_layer_size)
+        self.layer_2 = torch.nn.Linear(middle_layer_size, middle_layer_size)
+        self.layer_3 = torch.nn.Linear(middle_layer_size, second_middle_layer_size)
+        self.dropout_1 = torch.nn.Dropout(0.1)
+        self.dropout_2 = torch.nn.Dropout(0.1)
+        self.dropout_3 = torch.nn.Dropout(0.1)
+        self.classifier = torch.nn.Linear(second_middle_layer_size, 3)
         self.ac_final = torch.nn.Softmax(dim=1)
         self.is_distill = is_distill
     
@@ -117,15 +123,24 @@ class RobertaClass(torch.nn.Module):
         # Add historical data to the layer. 
         pooler = torch.cat((pooler, historical_data), 1)
         # Feed to MLP
-        pooler = self.pre_classifier(pooler)
+        pooler = self.layer_1(pooler)
         pooler = torch.nn.ReLU()(pooler)
-        pooler = self.dropout(pooler)
+        pooler = self.dropout_1(pooler)
+
+        pooler = self.layer_2(pooler)
+        pooler = torch.nn.ReLU()(pooler)
+        pooler = self.dropout_2(pooler)
+
+        pooler = self.layer_3(pooler)
+        pooler = torch.nn.ReLU()(pooler)
+        pooler = self.dropout_3(pooler)
+
         pooler = self.classifier(pooler)
         # Apply softmax to final layer. 
         output = self.ac_final(pooler)
         return output
 
-class RobertaFineTuner:
+class ModelFineTuner:
 
     def __init__(self, model: torch.nn.Module, 
                  loss_function, optimizer, data_source: pd.DataFrame, 
@@ -324,7 +339,7 @@ def flatten_report(report: Dict[str, str or Dict[str, float]]):
 def main():
     args = get_model_args()
     tokenizer, model_source, model_embedding_size = get_model(args.model_type)
-    model = RobertaClass(model_source, model_embedding_size, is_distill=args.model_type == 'distill', freeze=args.freeze_model) 
+    model = ModelClass(model_source, model_embedding_size, is_distill=args.model_type == 'distill', freeze=args.freeze_model) 
     model.to(device)
 
     # Load in existing weights if specified. 
@@ -347,10 +362,10 @@ def main():
     else:
         data_path = '../data/processed_headline_data/<=2022-03-01.csv'
     df = get_train_data(data_path)
-    ModelTrainer = RobertaFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
+    ModelTrainer = ModelFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
                                 data_source=df, tokenizer=tokenizer,
                                 train_batch_size= args.train_batch_size, test_batch_size =args.test_batch_size, 
-                                data_limit=args.data_limit)
+                                data_limit=args.data_limit, testing=args.testing)
     
     for epoch in range(starting_epoch+1, args.epochs+starting_epoch+1):
         ModelTrainer.train(epoch)
@@ -362,7 +377,7 @@ def main():
 
         print("Saving model...")
         model_str = f"{args.model_type}:{args.learning_rate}:{args.train_batch_size}"
-        output_model_file = f'{model_str}_{epoch}.pt'
+        output_model_file = f'+{model_str}_{epoch}.pt'
         weights_dir = os.path.join(args.output_dir, 'weights/')
         
         if not os.path.exists(weights_dir):
@@ -375,5 +390,6 @@ def main():
         print("all files saved.")
 
     plot_training_data(training_df, args)
+    plot_loss_data(training_df, args)
 if __name__ == '__main__':
     main()
