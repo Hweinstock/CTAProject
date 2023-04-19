@@ -305,7 +305,7 @@ class RobertaFineTuner:
         print(epoch_conf_matrix)
         print("\n")
 
-        return report_dict, epoch_accu
+        return report_dict, epoch_loss
 
 def flatten_report(report: Dict[str, str or Dict[str, float]]):
     labels = ['Increasing', 'Decreasing', 'Neutral', 'macro avg', 'micro avg', 'weighted avg']
@@ -355,8 +355,10 @@ def main():
     for epoch in range(starting_epoch+1, args.epochs+starting_epoch+1):
         ModelTrainer.train(epoch)
 
-        report, accu = ModelTrainer.valid(epoch)
-        training_data.append(flatten_report(report))
+        report, loss = ModelTrainer.valid(epoch)
+        flattened_report = flatten_report(report)
+        flattened_report['loss'] = loss
+        training_data.append(flattened_report)
 
         print("Saving model...")
         model_str = f"{args.model_type}:{args.learning_rate}:{args.train_batch_size}"
