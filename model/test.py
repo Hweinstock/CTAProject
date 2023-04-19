@@ -5,6 +5,9 @@ import io
 import sys
 from tqdm import tqdm
 from statistics import mean
+from torch import cuda
+
+device = 'cuda' if cuda.is_available() else 'cpu'
 
 def disable_print():
     text_trap = io.StringIO()
@@ -33,6 +36,7 @@ class TestModel(unittest.TestCase):
         model_type = 'tiny'
         tokenizer, model_source, model_embedding_size = get_model(model_type)
         model = RobertaClass(model_source, model_embedding_size, is_distill=model_type == 'distill', freeze=False) 
+        model.to(device)
         loss_function = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(params = model.parameters(), lr = 1e-5)
         data_path = '../data/processed_headline_data/<=2022-03-01.csv'
