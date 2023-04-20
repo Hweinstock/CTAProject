@@ -7,6 +7,7 @@ import torch
 import pandas as pd
 from typing import List, Tuple
 from args import get_use_model_args
+import os 
 
 #model = torch.load('3labelmodel')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -48,7 +49,7 @@ class ModelPredictor:
                 token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
                 targets = data['targets'].to(device, dtype=torch.long) # We don't use these. 
                 historical_data = data['stock_data'].to(device, dtype=torch.long)
-                outputs = self.model(ids, mask, token_type_ids, historical_data).squeeze()
+                outputs = self.model(ids, mask, token_type_ids, historical_data)
                 confidence, choices = torch.max(outputs, 1)
                 for choice in choices:
                     predictions.append(choice.item())
@@ -68,10 +69,15 @@ if __name__ == '__main__':
     #     model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
     # else:
     #     model = torch.load('../../3labelstockmodel.bin')
-    model_type = args.weights.split("_")[0]
-    tokenizer, model, embedding_size = get_model
+    weights_file_basename = os.path.basename(args.weights)
+    model_type = weights_file_basename.split("_")[0].split(":")[0]
+    tokenizer, model_source, embedding_size = get_model(model_type)
+    model = ModelClass(model_source, embedding_size, is_distill=model_type == 'distill', freeze=False)
+    model.load_state_dict(torch.load(args.weights))
+    model.to(device)
+    model.eval()
     data_source = pd.read_csv(args.data)
-    predictor = ModelPredictor(model)
+    predictor = ModelPredictor(model, tokenizer)
     res = predictor.evaluate(data_source=data_source)
     
     raw_data = {
