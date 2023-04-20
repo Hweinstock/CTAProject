@@ -2,9 +2,9 @@ import pandas as pd
 import os 
 from dateutil import parser
 from args import get_process_headline_parameters
-
+from typing import List
 from config.logger import RootLogger
-from stock_data import merge_stock_data, filter_out_neutral, process_data_dir, split_data_on_date
+from stock_data import merge_stock_data, filter_out_neutral, process_data_dir, split_data_on_date, aggregate_delta_days, fill_in_missing_dates
 
 if __name__ == "__main__":
     args = get_process_headline_parameters()

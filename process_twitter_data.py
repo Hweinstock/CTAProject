@@ -8,7 +8,7 @@ import pandas as pd
 
 from config.logger import RootLogger
 from config.load_env import DATE_FORMAT
-from stock_data import get_stock_data, merge_stock_data, filter_out_neutral, process_data_dir
+from stock_data import get_stock_data, merge_stock_data, filter_out_neutral, process_data_dir, fill_in_missing_dates, aggregate_delta_days
 
 def read_in_tweet_data(root_dir: str, output_path: str) -> List[str]:
     """
@@ -63,6 +63,9 @@ def process_dir(dir_path: str, output_dir: str) -> str or None:
         rows += new_rows
 
     df = pd.DataFrame(rows, columns=['date', 'text', 'stock'])
+    df = fill_in_missing_dates(df)
+    df = aggregate_delta_days(df)
+
     stock_df = get_stock_data(stock, start_date=minimum_date, end_date=maxmimum_date)
     if stock_df.empty:
         return None
@@ -97,4 +100,4 @@ if __name__ == "__main__":
     tweet_data = read_in_tweet_data(root_dir, output_path)
     data = process_data_dir(output_path, output_path)
     merged_file = merge_stock_data(data, output_path, 'tweet-data.csv')
-    filtered_file = filter_out_neutral(merged_file, final_path)
+    filtered_file = filter_out_neutral(merged_file, final_path, remove=False)

@@ -44,6 +44,7 @@ def aggregate_day_k(original_df: pd.DataFrame, stock_articles_df: pd.DataFrame, 
 
 def aggregate_delta_days(stock_articles_df: pd.DataFrame) -> pd.DataFrame:
     """Comprise text from delta days together in the text field. 
+    same function as one defined in stock_data. 
 
     Args:
         stock_articles_df (pd.DataFrame): source df
@@ -51,12 +52,6 @@ def aggregate_delta_days(stock_articles_df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: output df
     """
-    def adjust_text(text: str):
-        if text[0] != "\"":
-            text = "\"" + text 
-        if text[-1] != "\"":
-            text += "\""
-        return text
 
 
     stock_articles_df.rename(columns={'title':'text'}, inplace=True)

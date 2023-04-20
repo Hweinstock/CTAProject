@@ -141,6 +141,10 @@ def process_stock_csv(path: str, output_path: str) -> str:
     for col in get_stock_historical_headers():
         df[col] = (df[col] / 2.0) + 0.5
 
+    # TODO: check if placing it here works better. 
+    # df = fill_in_missing_dates(df)
+    # df = aggregate_delta_days(df)
+
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     df.to_csv(outputfile, index=False)
@@ -193,3 +197,55 @@ def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, r
     df_after.to_csv(after_filepath, index=False)
 
     return before_filepath, after_filepath
+
+def fill_in_missing_dates(data_df: pd.DataFrame) -> pd.DataFrame:
+    data_df = data_df.groupby(by='date').agg({'text': lambda x: ".".join(x), 
+                                               'stock': lambda x: x.iloc[0]}).reset_index()
+    
+    data_df = data_df.set_index('date', drop=True)
+    data_df.index=pd.to_datetime(data_df.index)
+    data_df = data_df.asfreq('D', fill_value='')
+    data_df['date'] = data_df.index 
+    data_df.reset_index(inplace=True, drop=True)
+    data_df['date'] = data_df['date'].dt.strftime('%Y-%m-%d')
+
+    return data_df
+
+def aggregate_day_k(original_df: pd.DataFrame, data_df: pd.DataFrame, k: int) -> pd.DataFrame:
+    """Add text for day d-k to day d and return the resulting dataframe. 
+
+    We must pass in the original to avoid duplicate adding. 
+
+    Args:
+        original_df (pd.DataFrame): df before any text was modified. 
+        stock_articles_df (pd.DataFrame): df currently in modification
+        k (int): offset to add text
+
+    Returns:
+        pd.DataFrame: updated version of stock_articles_df with offset text added. 
+    """
+    data_df['offset_text'] = original_df['text'].shift(k).fillna("")
+    data_df['text'] = data_df['offset_text'] + " " + data_df['text']
+    data_df['text'] = data_df['text'].str.strip()
+    data_df = data_df.drop(columns=['offset_text'])
+    # Delete concatenations of empty strings. 
+    data_df.loc[data_df['text'] == ' '] = ''
+    return data_df
+
+def aggregate_delta_days(data_df: pd.DataFrame) -> pd.DataFrame:
+    """Comprise text from delta days together in the text field. 
+
+    Args:
+        stock_articles_df (pd.DataFrame): source df
+
+    Returns:
+        pd.DataFrame: output df
+    """
+
+
+    data_df.rename(columns={'title':'text'}, inplace=True)
+    original_df = data_df.copy()
+    for window in range(1, STOCK_PRICE_LAG+1):
+        data_df = aggregate_day_k(original_df, data_df, k=window)
+
+    return data_df

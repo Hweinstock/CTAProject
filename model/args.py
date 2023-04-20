@@ -34,7 +34,7 @@ def add_model_arguments(parser: argparse.ArgumentParser) -> None:
                                   action='store_true')
     
     model_parameters.add_argument('-s', "--data_source", 
-                                  choices=['tweet', 'headline'],
+                                  choices=['tweet', 'headline', 'all'],
                                   default='headline',
                                   type=str,
                                   help="source of data")

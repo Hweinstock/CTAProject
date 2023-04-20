@@ -356,12 +356,18 @@ def main():
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params = model.parameters(), lr = args.learning_rate)
     print(f"Running model with learning rate {args.learning_rate} and train batch size {args.train_batch_size}")
-
+    
+    tweet_data_path = '../data/processed_tweet_data/tweet-data.csv'
+    headline_data_path = '../data/processed_headline_data/<=2022-03-01.csv'
     if args.data_source == 'tweet':
-        data_path = '../data/processed_tweet_data/tweet-data-f.csv'
+        df = get_train_data(tweet_data_path)
+    elif args.data_source == 'all':
+        tweet_df = get_train_data(tweet_data_path)
+        headline_df = get_train_data(headline_data_path)
+        df = pd.concat([tweet_df, headline_df], ignore_index=True, sort=False)
     else:
-        data_path = '../data/processed_headline_data/<=2022-03-01.csv'
-    df = get_train_data(data_path)
+        df = get_train_data(headline_data_path)
+    
     ModelTrainer = ModelFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
                                 data_source=df, tokenizer=tokenizer,
                                 train_batch_size= args.train_batch_size, test_batch_size =args.test_batch_size, 
