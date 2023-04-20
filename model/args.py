@@ -67,6 +67,21 @@ def add_logging_arguments(parser: argparse.ArgumentParser) -> None:
     logging_options.add_argument("-fv", "--file_verbosity", type=int, choices=[0, 1, 2, 3], default=3,
                    help="decrease output log file verbosity (default: %(default)s)")
 
+def add_use_model_args(parser: argparse.ArgumentParser) -> None:
+    use_model_parameters = parser.add_argument_group('use model parameters')
+
+    use_model_parameters.add_argument('-w', '--weights', type=str,
+                                      help='path to model weights. Follow format \`\{model_type\}:\{learning_rate\}:\{args.train_batch_size\}', 
+                                      required=True)
+    
+    use_model_parameters.add_argument('-d', '--data', type=str,
+                                      help='path to data to evaluate (.csv)', 
+                                      default='../data/processed_headline_data/>2022-03-01.csv')
+    
+    use_model_parameters.add_argument('-o', '--output', type=str, 
+                                      help="path to outputfile for predictions (will be .csv)",
+                                      default='predictions.csv')
+    
 def get_model_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__,
             formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -81,3 +96,10 @@ def get_model_args() -> argparse.Namespace:
         p.error("stats_filepath already specified, can't set new name for file with stats_filename.")
 
     return p.parse_args()
+
+def get_use_model_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description=__doc__,
+            formatter_class=argparse.RawDescriptionHelpFormatter)
+    add_use_model_args(p)
+    args = p.parse_args()
+    return args

@@ -1,4 +1,4 @@
-from fullModel import RobertaClass, HeadlineData, MAX_LEN
+from model import ModelClass, HeadlineData, MAX_LEN, get_model
 from transformers import DistilBertTokenizer
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -6,15 +6,16 @@ from sklearn.metrics import classification_report
 import torch 
 import pandas as pd
 from typing import List, Tuple
+from args import get_use_model_args
 
 #model = torch.load('3labelmodel')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', truncation=True, do_lower_case=True)
 
 class ModelPredictor:
 
-    def __init__(self, model: torch.nn.Module):
+    def __init__(self, model: torch.nn.Module, tokenizer):
         self.model = model
+        self.tokenizer = tokenizer
         self.batch_size = 10
         self.data_loader = None
         self.softmax = torch.nn.Softmax(dim=1)
@@ -23,7 +24,7 @@ class ModelPredictor:
 
         print(f"Full Dataset: {data_source.shape}")
 
-        dataset = HeadlineData(data_source, tokenizer, MAX_LEN)
+        dataset = HeadlineData(data_source, self.tokenizer, MAX_LEN)
 
         eval_params = {
             'batch_size': self.batch_size, 
@@ -62,12 +63,14 @@ class ModelPredictor:
         return predictions, confidence_values
  
 if __name__ == '__main__':
-    if device != 'cuda':
-        model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
-    else:
-        model = torch.load('../../3labelstockmodel.bin')
-    datapath = '../data/processed_headline_data/>2022-03-01.csv'
-    data_source = pd.read_csv(datapath)
+    args = get_use_model_args()
+    # if device != 'cuda':
+    #     model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
+    # else:
+    #     model = torch.load('../../3labelstockmodel.bin')
+    model_type = args.weights.split("_")[0]
+    tokenizer, model, embedding_size = get_model
+    data_source = pd.read_csv(args.data)
     predictor = ModelPredictor(model)
     res = predictor.evaluate(data_source=data_source)
     
@@ -78,7 +81,7 @@ if __name__ == '__main__':
         'confidence': res[1],
     }
     output = pd.DataFrame(raw_data)
-    output.to_csv('predictions.csv')
+    output.to_csv(args.output)
     
 
 

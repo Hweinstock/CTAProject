@@ -1,7 +1,9 @@
-import numpy as np
 import pandas as pd
 import seaborn as sns
 import argparse
+import os
+
+PLOTS_DIR = 'plots/'
 
 def plot_training_data(data: pd.DataFrame, args: argparse.Namespace = None):
     plot_data = data[['accuracy', 'macro avg_precision', 'macro avg_recall' ,'macro avg_f1-score',
@@ -10,11 +12,11 @@ def plot_training_data(data: pd.DataFrame, args: argparse.Namespace = None):
         title = f"+{args.model_type}, Lr: {args.learning_rate}, trb: {args.train_batch_size}"
     else:
         title = 'Training Plot'
-    
+    output_path = os.path.join(PLOTS_DIR, title)
     sns.set_theme(style="whitegrid")
     fig = sns.lineplot(data=plot_data, palette="tab10", linewidth=1.0)
     fig.set_title(title)
-    fig.get_figure().savefig(title)
+    fig.get_figure().savefig(output_path)
     fig.get_figure().clf()
 
 def plot_loss_data(data: pd.DataFrame, args: argparse.Namespace = None):
@@ -23,10 +25,11 @@ def plot_loss_data(data: pd.DataFrame, args: argparse.Namespace = None):
         title = f"+Loss:{args.model_type}, Lr: {args.learning_rate}, trb: {args.train_batch_size}"
     else:
         title = 'Training Plot'
+    output_path = os.path.join(PLOTS_DIR, title)
     sns.set_theme(style='darkgrid')
     fig2 = sns.lineplot(data=plot_data2, palette='tab10', linewidth=2.0)
     fig2.set_title(title)
-    fig2.get_figure().savefig(title)
+    fig2.get_figure().savefig(output_path)
     fig2.get_figure().clf()
 
 if __name__ == '__main__':
