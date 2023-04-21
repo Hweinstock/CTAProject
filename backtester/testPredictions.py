@@ -39,4 +39,4 @@ if __name__ == '__main__':
     stats_df = pd.concat(cum_stats, axis=1).transpose()
     plot_results(stats_df, 'newResults')
     report_columns(stats_df, ['Return [%]', 'Volatility (Ann.) [%]', '# Trades', 'Win Rate [%]'])
-    stats_df.to_csv('strategy_stats.csv')
+    stats_df.to_csv('strategy_stats2.csv')
