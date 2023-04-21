@@ -6,7 +6,7 @@ import logging
 
 
 DATE_FORMAT = "%Y-%m-%d"
-STOCK_PRICE_LAG = 5
+STOCK_PRICE_LAG = 10
 dotenv_path = Path('config/.env')
 load_dotenv(dotenv_path)
 
