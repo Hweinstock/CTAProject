@@ -392,7 +392,7 @@ def main():
         torch.save(model.state_dict(), os.path.join(weights_dir, output_model_file))
         print("Saving statistics...")
         training_df = pd.DataFrame(training_data)
-        training_df.to_csv(stats_filename, index=False)
+        training_df.to_csv(os.path.join('./run_summaries/', stats_filename, index=False))
         print("all files saved.")
 
     plot_training_data(training_df, args)
