@@ -61,7 +61,7 @@ def aggregate_delta_days(stock_articles_df: pd.DataFrame) -> pd.DataFrame:
     #stock_articles_df['text'] = stock_articles_df['text'].apply(adjust_text)
     return stock_articles_df
 
-def download_data(start_date: datetime, end_date: datetime, article_count_cutoff: int, output_dir: str = 'data/raw_headline_data/'):
+def download_data(start_date: datetime, end_date: datetime, article_count_cutoff: int, output_dir: str = './data/raw_headline_data/'):
     """
     Download all articles from Benzinga
     Parse unique stock tags. 

@@ -8,7 +8,7 @@ from stock_data import merge_stock_data, filter_out_neutral, process_data_dir, s
 
 if __name__ == "__main__":
     args = get_process_headline_parameters()
-    RootLogger.initialize('/config/', args.verbosity, args.file_verbosity)
+    RootLogger.initialize('./config/', args.verbosity, args.file_verbosity)
 
     output_path = args.output_dir
     final_path = os.path.join(output_path, 'headline-data-filtered.csv')

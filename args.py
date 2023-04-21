@@ -22,7 +22,7 @@ def add_get_headline_parameters(parser: argparse.ArgumentParser) -> None:
                    default=100)
     
     
-    add_output_dir_argument(headline_parameters, 'data/raw_headline_data/')
+    add_output_dir_argument(headline_parameters, './data/raw_headline_data/')
     
 def add_process_headline_parameters(parser: argparse.ArgumentParser) -> None:
     headline_parameters = parser.add_argument_group('process headline parameters')
