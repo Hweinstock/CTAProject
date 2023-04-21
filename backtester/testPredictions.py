@@ -24,11 +24,11 @@ def parse_stats(stats: pd.Series):
 if __name__ == '__main__':
     args = get_test_predictions_arguments()
 
-    prediction_files = [f for f in os.listdir(args.prediction_path) if f.endswith('.csv')]
+    prediction_files = [f for f in os.listdir(args.predictions_path) if f.endswith('.csv')]
     cum_stats = []
 
     for index, pred_source_file in tqdm(enumerate(prediction_files), total=len(prediction_files)):
-        source_file_path = os.path.join(args.prediction_path, pred_source_file)
+        source_file_path = os.path.join(args.predictions_path, pred_source_file)
         stock = pred_source_file.split('_')[0]
         df = pd.read_csv(source_file_path, parse_dates=['date'], index_col=['date'])
         df.columns = [x.capitalize() for x in df.columns]
