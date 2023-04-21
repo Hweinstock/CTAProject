@@ -39,6 +39,6 @@ if __name__ == '__main__':
         cum_stats.append(parse_stats(stats))
 
     stats_df = pd.concat(cum_stats, axis=1).transpose()
-    plot_results(stats_df, args.output)
+    plot_results(stats_df, os.path.join('./plots/', args.output))
     report_columns(stats_df, ['Return [%]', 'Volatility (Ann.) [%]', '# Trades', 'Win Rate [%]'])
-    stats_df.to_csv(args.output + ".csv")
+    stats_df.to_csv(os.path.join('./strategy_stats', args.output + ".csv"))

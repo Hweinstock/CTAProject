@@ -15,7 +15,7 @@ def add_test_predictions_arguments(parser: argparse.ArgumentParser) -> None:
                                                default=default_prediction_dir)
     
     test_predictions_arguments.add_argument("-o", "--output", type=str, 
-                                     help="path to export both .csv and .png plot",
+                                     help="name of file to export both .csv strategy summary and .png plot",
                                      default='newresults')
     
     add_output_dir_arguments(parser, 'data/prediction_data')
