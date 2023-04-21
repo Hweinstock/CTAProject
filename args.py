@@ -1,12 +1,12 @@
 import argparse
 
-def add_output_dir_argument(parser: argparse._ArgumentGroup, default: str) -> None:
+def add_output_dir_arguments(parser: argparse._ArgumentGroup, default: str) -> None:
 
     parser.add_argument("-o", "--output_dir", type=str, 
                                      help="path to directory where final csvs should be placed. ",
                                      default=default)
 
-def add_get_headline_parameters(parser: argparse.ArgumentParser) -> None:
+def add_get_headline_arguments(parser: argparse.ArgumentParser) -> None:
     headline_parameters = parser.add_argument_group('headline parameters')
     
     headline_parameters.add_argument("-s", "--start_date", type=str,
@@ -22,9 +22,9 @@ def add_get_headline_parameters(parser: argparse.ArgumentParser) -> None:
                    default=100)
     
     
-    add_output_dir_argument(headline_parameters, './data/raw_headline_data/')
+    add_output_dir_arguments(headline_parameters, './data/raw_headline_data/')
     
-def add_process_headline_parameters(parser: argparse.ArgumentParser) -> None:
+def add_process_headline_arguments(parser: argparse.ArgumentParser) -> None:
     headline_parameters = parser.add_argument_group('process headline parameters')
 
     headline_parameters.add_argument("-sp", "--split_date", type=str, 
@@ -35,7 +35,7 @@ def add_process_headline_parameters(parser: argparse.ArgumentParser) -> None:
                                      help="path to source the data from.", 
                                      default="data/raw_headline_data/")
 
-    add_output_dir_argument(headline_parameters, "data/processed_headline_data/")
+    add_output_dir_arguments(headline_parameters, "data/processed_headline_data/")
 
 def add_logging_arguments(parser: argparse.ArgumentParser) -> None:
     logging_options = parser.add_argument_group('logging options')
@@ -45,21 +45,38 @@ def add_logging_arguments(parser: argparse.ArgumentParser) -> None:
     logging_options.add_argument("-fv", "--file_verbosity", type=int, choices=[0, 1, 2, 3], default=3,
                    help="decrease output log file verbosity (default: %(default)s)")
 
-def get_process_headline_parameters() -> argparse.Namespace:
+def add_process_predictions_arguments(parser: argparse.ArgumentParser) -> None:
+    process_predictions_arguments = parser.add_argument_group('process predictions parameters')
+
+    default_prediction_path = 'backtester/predictions.csv'
+    process_predictions_arguments.add_argument("-p", "--predictions_path", type=str, 
+                                               help=f"path to raw predictions to csv file. DEFAULT: {default_prediction_path}", 
+                                               default=default_prediction_path)
+    
+    add_output_dir_arguments(parser, 'data/prediction_data')
+
+def get_process_predictions_arguments() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description=__doc__,
+            formatter_class=argparse.RawDescriptionHelpFormatter)
+    add_process_predictions_arguments(p)
+
+    return p.parse_args()
+
+def get_process_headline_arguments() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__,
             formatter_class=argparse.RawDescriptionHelpFormatter)
     
-    add_process_headline_parameters(p)
+    add_process_headline_arguments(p)
     add_logging_arguments(p)
 
     return p.parse_args()
 
-def get_headline_data_parameters() -> argparse.Namespace:
+def get_headline_data_arguments() -> argparse.Namespace:
     
     p = argparse.ArgumentParser(description=__doc__,
             formatter_class=argparse.RawDescriptionHelpFormatter)
     
-    add_get_headline_parameters(p)
+    add_get_headline_arguments(p)
     add_logging_arguments(p)
 
     return p.parse_args()
