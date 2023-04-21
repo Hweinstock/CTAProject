@@ -6,8 +6,9 @@ import numpy as np
 
 from simpleStrategy import SimpleStrategy
 from analyzeResults import plot_results, report_columns
+from args import get_test_predictions_arguments
 
-# 
+
 np.seterr(divide='ignore')
 
 def parse_stats(stats: pd.Series):
@@ -21,12 +22,13 @@ def parse_stats(stats: pd.Series):
        'Profit Factor', 'Expectancy [%]']]
 
 if __name__ == '__main__':
-    prediction_data = '../data/prediction_data/'
-    prediction_files = [f for f in os.listdir(prediction_data) if f.endswith('.csv')]
+    args = get_test_predictions_arguments()
+
+    prediction_files = [f for f in os.listdir(args.prediction_path) if f.endswith('.csv')]
     cum_stats = []
 
     for index, pred_source_file in tqdm(enumerate(prediction_files), total=len(prediction_files)):
-        source_file_path = os.path.join(prediction_data, pred_source_file)
+        source_file_path = os.path.join(args.prediction_path, pred_source_file)
         stock = pred_source_file.split('_')[0]
         df = pd.read_csv(source_file_path, parse_dates=['date'], index_col=['date'])
         df.columns = [x.capitalize() for x in df.columns]
@@ -37,6 +39,6 @@ if __name__ == '__main__':
         cum_stats.append(parse_stats(stats))
 
     stats_df = pd.concat(cum_stats, axis=1).transpose()
-    plot_results(stats_df, 'newResults')
+    plot_results(stats_df, args.output)
     report_columns(stats_df, ['Return [%]', 'Volatility (Ann.) [%]', '# Trades', 'Win Rate [%]'])
-    stats_df.to_csv('strategy_stats2.csv')
+    stats_df.to_csv(args.output + ".csv")
