@@ -95,7 +95,7 @@ def add_stock_data(df: pd.DataFrame) -> pd.DataFrame:
     return combined_df
 
 if __name__ == '__main__':
-    predictions_path = 'backtester/predictions.csv'
+    predictions_path = 'backtester/more_predictions.csv'
     export_path = 'data/prediction_data'
 
     df = pd.read_csv(predictions_path, index_col=[0])
