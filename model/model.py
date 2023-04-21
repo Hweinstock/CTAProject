@@ -13,7 +13,7 @@ from typing import Dict, Tuple, Any
 # adapted from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
 MAX_LEN = 256 
-HISTORICAL_DELTA = 5
+HISTORICAL_DELTA = 10
 
 device = 'cuda' if cuda.is_available() else 'cpu'
 
@@ -392,7 +392,7 @@ def main():
         torch.save(model.state_dict(), os.path.join(weights_dir, output_model_file))
         print("Saving statistics...")
         training_df = pd.DataFrame(training_data)
-        training_df.to_csv(os.path.join('./run_summaries/', stats_filename, index=False))
+        training_df.to_csv(os.path.join('./run_summaries/', stats_filename), index=False)
         print("all files saved.")
 
     plot_training_data(training_df, args)
