@@ -95,7 +95,11 @@ def add_stock_data(df: pd.DataFrame) -> pd.DataFrame:
     return combined_df
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     predictions_path = 'backtester/more_predictions.csv'
+=======
+    predictions_path = 'backtester/new_predictions.csv'
+>>>>>>> a5b025f597fd75ec8f1b6647d9c0c55b881f22f5
     export_path = 'data/prediction_data'
 
     df = pd.read_csv(predictions_path, index_col=[0])
@@ -107,6 +111,8 @@ if __name__ == '__main__':
     
     for index, cur_df in tqdm(enumerate(split_dfs), total=len(split_dfs)):
         res_df = add_stock_data(cur_df)
+        if len(res_df.index) == 0:
+            continue
         stock = res_df['stock'].iloc[0]
         res_df = res_df.drop('stock', axis=1)
         filepath = os.path.join(export_path, f"{stock}_predictions.csv")
