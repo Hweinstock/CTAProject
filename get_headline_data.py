@@ -6,7 +6,7 @@ from args import get_headline_data_parameters
 
 if __name__ == '__main__':
     args = get_headline_data_parameters()
-    RootLogger.initialize('/config/', args.verbosity, args.file_verbosity)
+    RootLogger.initialize('./config/', args.verbosity, args.file_verbosity)
     args = get_headline_data_parameters()
     start_date = datetime.strptime(args.start_date, DATE_FORMAT)
     end_date = datetime.strptime(args.end_date, DATE_FORMAT)
