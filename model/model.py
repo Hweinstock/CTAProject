@@ -9,6 +9,7 @@ from plotTrainingData import plot_training_data, plot_loss_data
 import os
 from args import get_model_args
 from typing import Dict, Tuple, Any, List
+from sklearn.model_selection import train_test_split
 
 # adapted from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
@@ -63,7 +64,9 @@ def read_in_chunked_data(dir_path: str, prefix: str) -> pd.DataFrame:
         pd.DataFrame: concatted/combined df
     """
     data_files = [os.path.join(dir_path, f) for f in os.listdir(dir_path) if f.startswith(prefix) and f.endswith('.csv')]
-    return pd.concat([get_train_data(f) for f in data_files])
+    combined_df = pd.concat([get_train_data(f) for f in data_files])
+    combined_df.reset_index(inplace=True)
+    return combined_df
 
 class HeadlineData(Dataset):
     def __init__(self, dataframe, tokenizer, max_len):
@@ -178,11 +181,12 @@ class ModelFineTuner:
         
     
     def initialize_dataloaders(self, data_source: pd.DataFrame) -> Tuple[DataLoader]:
-        train_size = 0.8
-        train_data = data_source.sample(frac=train_size, random_state=200)
-        test_data = data_source.drop(train_data.index).reset_index(drop=True)
-        train_data = train_data.reset_index(drop=True)
-
+        #train_size = 0.8
+        #train_data = data_source.sample(frac=train_size, random_state=200)
+        #test_data = data_source.drop(train_data.index).reset_index(drop=True)
+        #train_data = train_data.reset_index(drop=True)
+        train_data, test_data = train_test_split(data_source, test_size=0.1, random_state=200, shuffle=True) 
+        print(len(train_data.index), len(test_data.index))
         data_source_pos = data_source[data_source['label'] == 1]
         data_source_neg = data_source[data_source['label'] == 0]
         data_source_neutral = data_source[data_source['label'] == 2]
@@ -370,7 +374,7 @@ def main():
         stats_filename = args.stats_filename
 
     loss_function = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(params = model.parameters(), lr = args.learning_rate, weight_decay=1e-05)
+    optimizer = torch.optim.Adam(params = model.parameters(), lr = args.learning_rate, weight_decay=1e-03)
     print(f"Running model with learning rate {args.learning_rate} and train batch size {args.train_batch_size}")
     
     tweet_data_path = '../data/processed_tweet_data/tweet-data.csv'
@@ -386,7 +390,7 @@ def main():
         df = pd.concat([tweet_df, headline_df], ignore_index=True, sort=False)
     else:
         df = read_in_chunked_data(headline_data_path, matched_prefix)
-    
+ 
     ModelTrainer = ModelFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
                                 data_source=df, tokenizer=tokenizer,
                                 train_batch_size= args.train_batch_size, test_batch_size =args.test_batch_size, 
