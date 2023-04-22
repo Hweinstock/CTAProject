@@ -138,8 +138,8 @@ def process_stock_csv(path: str, output_path: str) -> str:
     outputfile = os.path.join(output_path, filename)
 
     # Normalize stock data to 0-1 range. 
-    for col in get_stock_historical_headers():
-        df[col] = (df[col] / 2.0) + 0.5
+    # for col in get_stock_historical_headers():
+    #     df[col] = (df[col] / 2.0) + 0.5
 
     # TODO: check if placing it here works better. 
     # df = fill_in_missing_dates(df)
@@ -169,7 +169,7 @@ def process_data_dir(dir_path: str, output_path: str) -> List[str]:
     RootLogger.log_info(f"Exporting files to {output_path}")
     return output_files
 
-def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, remove: bool = False) -> Tuple[str, str]:
+def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, remove: bool = False, chunks: int =10) -> Tuple[str, str]:
     """Read in a pandas df from csv and write two csv: one before a date, one after. 
 
     Args:
@@ -189,11 +189,14 @@ def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, r
 
     if remove:
         os.remove(data_path)
-        
-    before_filepath = os.path.join(output_dir, f"<={target_date.strftime(DATE_FORMAT)}.csv")
+    
+    before_dfs = np.array_split(df_before, chunks)
+    for cur_chunk in range(chunks):
+        before_filepath = os.path.join(output_dir, f"<={target_date.strftime(DATE_FORMAT)}_{cur_chunk}.csv")
+        before_dfs[cur_chunk].to_csv(before_filepath, index=False)
+
     after_filepath = os.path.join(output_dir, f">{target_date.strftime(DATE_FORMAT)}.csv")
 
-    df_before.to_csv(before_filepath, index=False)
     df_after.to_csv(after_filepath, index=False)
 
     return before_filepath, after_filepath

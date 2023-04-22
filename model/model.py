@@ -8,7 +8,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, f
 from plotTrainingData import plot_training_data, plot_loss_data
 import os
 from args import get_model_args
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, List
 
 # adapted from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
@@ -51,6 +51,19 @@ def get_historical_headers():
 def get_train_data(train_data_path: str) -> pd.DataFrame:
     train_data = pd.read_csv(train_data_path, lineterminator='\n')
     return train_data
+
+def read_in_chunked_data(dir_path: str, prefix: str) -> pd.DataFrame:
+    """Read in all files with prefix from directory as pandas df and concat them into one df. 
+
+    Args:
+        dir_path (str): path to search for files. 
+        prefix (str): prefix to match in path. 
+
+    Returns:
+        pd.DataFrame: concatted/combined df
+    """
+    data_files = [os.path.join(dir_path, f) for f in os.listdir(dir_path) if f.startswith(prefix) and f.endswith('.csv')]
+    return pd.concat([get_train_data(f) for f in data_files])
 
 class HeadlineData(Dataset):
     def __init__(self, dataframe, tokenizer, max_len):
@@ -361,15 +374,18 @@ def main():
     print(f"Running model with learning rate {args.learning_rate} and train batch size {args.train_batch_size}")
     
     tweet_data_path = '../data/processed_tweet_data/tweet-data.csv'
-    headline_data_path = '../data/processed_headline_data/<=2022-03-01.csv'
+    # This is due to chunking the files. 
+    headline_data_path = '../data/processed_headline_data/'
+    matched_prefix = '<=2022-03-01' 
+
     if args.data_source == 'tweet':
         df = get_train_data(tweet_data_path)
     elif args.data_source == 'all':
         tweet_df = get_train_data(tweet_data_path)
-        headline_df = get_train_data(headline_data_path)
+        headline_df = read_in_chunked_data(headline_data_path, matched_prefix)
         df = pd.concat([tweet_df, headline_df], ignore_index=True, sort=False)
     else:
-        df = get_train_data(headline_data_path)
+        df = read_in_chunked_data(headline_data_path, matched_prefix)
     
     ModelTrainer = ModelFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
                                 data_source=df, tokenizer=tokenizer,

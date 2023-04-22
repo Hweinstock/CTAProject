@@ -1,4 +1,4 @@
-from model import ModelClass, get_model, get_train_data, ModelFineTuner
+from model import ModelClass, get_model, read_in_chunked_data, ModelFineTuner
 import torch
 import unittest
 import io 
@@ -39,8 +39,9 @@ class TestModel(unittest.TestCase):
         model.to(device)
         loss_function = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(params = model.parameters(), lr = 1e-5)
-        data_path = '../data/processed_headline_data/<=2022-03-01.csv'
-        df = get_train_data(data_path)
+        headline_data_path = '../data/processed_headline_data/'
+        matched_prefix = '<=2022-03-01' 
+        df = read_in_chunked_data(headline_data_path, matched_prefix)
         ModelTrainer = ModelFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
                                     data_source=df, tokenizer=tokenizer,
                                     train_batch_size=1, test_batch_size=1, 
