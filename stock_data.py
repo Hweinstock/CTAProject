@@ -6,7 +6,7 @@ import os
 from typing import List, Tuple
 from tqdm import tqdm
 import numpy as np
-
+from dateutil import parser
 from config.load_env import DATE_FORMAT, STOCK_PRICE_LAG
 from config.logger import RootLogger
 
@@ -169,7 +169,7 @@ def process_data_dir(dir_path: str, output_path: str) -> List[str]:
     RootLogger.log_info(f"Exporting files to {output_path}")
     return output_files
 
-def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, remove: bool = False, chunks: int =10) -> Tuple[str, str]:
+def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, remove: bool = False, chunks: int =15, data_df: pd.DataFrame = None) -> List[str]:
     """Read in a pandas df from csv and write two csv: one before a date, one after. 
 
     Args:
@@ -177,12 +177,17 @@ def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, r
         target_date (datetime): date to split on. 
         output_dir (str): where to write generated .csv files.
         remove (bool): delete original file if true.  
+        chunks (int): number of files to split training data into (pre-date). 
+        data_df (pd.DataFrame): an arguement to overide data_path, and give the full df. 
 
     Returns:
         Tuple[str, str]: pair of filepath to newly written files. 
     """
     RootLogger.log_info(f"Splitting dataframe {data_path} based on {target_date.strftime(DATE_FORMAT)}")
-    orig_df = pd.read_csv(data_path, lineterminator='\n')
+    if data_df is None:
+        orig_df = pd.read_csv(data_path, lineterminator='\n')
+    else:
+        orig_df = data_df
     
     df_before = orig_df.loc[pd.to_datetime(orig_df['date']) <= target_date]
     df_after = orig_df.loc[pd.to_datetime(orig_df['date']) > target_date]
@@ -191,15 +196,17 @@ def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, r
         os.remove(data_path)
     
     before_dfs = np.array_split(df_before, chunks)
+    filepaths = []
     for cur_chunk in range(chunks):
         before_filepath = os.path.join(output_dir, f"<={target_date.strftime(DATE_FORMAT)}_{cur_chunk}.csv")
+        filepaths.append(before_filepath)
         before_dfs[cur_chunk].to_csv(before_filepath, index=False)
 
     after_filepath = os.path.join(output_dir, f">{target_date.strftime(DATE_FORMAT)}.csv")
-
+    filepaths.append(after_filepath)
     df_after.to_csv(after_filepath, index=False)
 
-    return before_filepath, after_filepath
+    return filepaths
 
 def fill_in_missing_dates(data_df: pd.DataFrame) -> pd.DataFrame:
     data_df = data_df.groupby(by='date').agg({'text': lambda x: ".".join(x), 

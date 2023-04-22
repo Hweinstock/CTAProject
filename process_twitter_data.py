@@ -8,7 +8,7 @@ import pandas as pd
 
 from config.logger import RootLogger
 from config.load_env import DATE_FORMAT
-from stock_data import get_stock_data, merge_stock_data, filter_out_neutral, process_data_dir, fill_in_missing_dates, aggregate_delta_days
+from stock_data import *
 
 def read_in_tweet_data(root_dir: str, output_path: str) -> List[str]:
     """
@@ -28,17 +28,17 @@ def read_in_tweet_data(root_dir: str, output_path: str) -> List[str]:
     files = []
     for cur_stock in tqdm(stocks):
         stock_path = os.path.join(root_dir, cur_stock)
-        filename = process_dir(stock_path, output_path)
+        filename = process_tweet_dir(stock_path, output_path)
         if filename is not None:
             files.append(filename) 
     RootLogger.log_info(f"Able to produce data for {len(files)} out of {len(stocks)} stocks.")
     return files
-    
-def process_dir(dir_path: str, output_dir: str) -> str or None:
+
+def process_tweet_dir(dir_path: str, output_dir: str) -> str or None:
     """
 
     Args:
-        dir_path (str): stock tweet directory
+        dir_path (str): stock data directory
         output_dir (str): dest dir for .csv
 
     Returns:

@@ -10,3 +10,4 @@ backtrader-code/orcl-1995-2014.txt
 **/keepers/**
 **log.txt
 data/prediction_data/**
+data/raw_kaggle_data/**

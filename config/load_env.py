@@ -14,3 +14,5 @@ load_dotenv(dotenv_path)
 class APIkeys:
     finnhubAPI: str = os.getenv('finnhubAPI')
     benzingaNewsAPI: str = os.getenv('benzingaNewsAPI')
+    NYTKey: str = os.getenv('NYTKey')
+    NYTSecret: str = os.getenv('NYTSecret')
