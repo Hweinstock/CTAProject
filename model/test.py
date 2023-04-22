@@ -62,9 +62,9 @@ class TestModel(unittest.TestCase):
             res, loss = ModelTrainer.valid(i)
             end_loss.append(loss)
         
-        # Check that ending accuracy is greater than starting accuracy. 
+        # Check that ending loss is less than starting accuracy. 
         self.assertTrue(mean(start_loss) > mean(end_loss))
-        always_print(f"Accuracy went from {mean(start_loss)} to {mean(end_loss)}")
+        always_print(f"Loss went from {mean(start_loss)} to {mean(end_loss)}")
     
 if __name__ == '__main__':
     unittest.main()

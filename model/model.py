@@ -120,10 +120,11 @@ class ModelClass(torch.nn.Module):
                             attention_mask=attention_mask)
         hidden_state = output_1[0]
         pooler = hidden_state[:, 0]
+        historical_data = torch.nn.GELU()(historical_data.float())
         # Add historical data to the layer. 
         pooler = torch.cat((pooler, historical_data), 1)
         # Apply it so that they are on same scale. 
-        pooler = torch.nn.GELU()(pooler)
+        #pooler = torch.nn.GELU()(pooler)
         # Feed to MLP
         pooler = self.layer_1(pooler)
         pooler = torch.nn.GELU()(pooler)
