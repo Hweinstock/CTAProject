@@ -378,16 +378,21 @@ def main():
     tweet_data_path = '../data/processed_tweet_data/tweet-data.csv'
     # This is due to chunking the files. 
     headline_data_path = '../data/processed_headline_data/'
-    matched_prefix = '<=2022-03-01' 
+    kaggle_data_path = '../data/processed_kaggle_data/'
+
+    headline_matched_prefix = '<=2022-03-01' 
+    kaggle_matched_prefix = '<=2019-06-01' 
 
     if args.data_source == 'tweet':
         df = get_train_data(tweet_data_path)
     elif args.data_source == 'all':
         tweet_df = get_train_data(tweet_data_path)
-        headline_df = read_in_chunked_data(headline_data_path, matched_prefix)
+        headline_df = read_in_chunked_data(headline_data_path, headline_matched_prefix)
         df = pd.concat([tweet_df, headline_df], ignore_index=True, sort=False)
+    elif args.data_source == 'kaggle':
+        df = read_in_chunked_data(kaggle_data_path, kaggle_matched_prefix)
     else:
-        df = read_in_chunked_data(headline_data_path, matched_prefix)
+        df = read_in_chunked_data(headline_data_path, headline_matched_prefix)
  
     ModelTrainer = ModelFineTuner(model=model, loss_function=loss_function, optimizer=optimizer, 
                                 data_source=df, tokenizer=tokenizer,

@@ -49,7 +49,7 @@ def add_stock_data(df: pd.DataFrame):
     df = pd.concat([df, buffer], ignore_index=True)
 
     stock_ticker = df['stock'].iloc[0]
-    stock_df = get_stock_data(stock_ticker, earliest_date, latest_date+timedelta(days=BUFFER_SIZE), raw=True)
+    stock_df = get_stock_data(stock_ticker, earliest_date, latest_date+timedelta(days=BUFFER_SIZE))
     # Remove buffer before first day. 
     stock_df = stock_df[stock_df['date'] >= earliest_date.strftime(DATE_FORMAT)]
     combined_df = pd.merge(stock_df, df, on="date", how='left').drop_duplicates()
