@@ -10,6 +10,15 @@ from tqdm import tqdm
 BUFFER_SIZE = 5
 
 def process_raw_kaggle(csv_path: str, export_path: str) -> List[str]:
+    """Process kaggle file by splitting it and adding stock data. 
+
+    Args:
+        csv_path (str): path to raw kaggle .csv
+        export_path (str): dir path to expore kaggle entries. 
+
+    Returns:
+        List[str]: _description_
+    """
     df = pd.read_csv(csv_path, lineterminator='\n', index_col=0)
     stocks = df['stock'].unique()
     files = []
@@ -38,7 +47,15 @@ def process_raw_kaggle(csv_path: str, export_path: str) -> List[str]:
     RootLogger.log_info(f"Done Processing Kaggle Data...")
     return files
 
-def add_stock_data(df: pd.DataFrame):
+def add_stock_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Add stock data to kaggle barebones data file
+
+    Args:
+        df (pd.DataFrame): kaggle df for single stock. 
+
+    Returns:
+        pd.DataFrame: combined dataframe with stock data. 
+    """
     earliest_date = parser.parse(df.iloc[0]['date'])
     latest_date = parser.parse(df.iloc[-1]['date'])
 
@@ -57,6 +74,15 @@ def add_stock_data(df: pd.DataFrame):
     return combined_df
 
 def resplit_data(new_split_data: datetime, path: str = './data/processed_kaggle_data/') -> List[str]:
+    """Split by date (-r) option to avoid reprocessing data, but split on a different date. 
+
+    Args:
+        new_split_data (datetime): 
+        path (str, optional): path find data and place re-split data. Defaults to './data/processed_kaggle_data/'.
+
+    Returns:
+        List[str]: list of paths to files resulting from the split. 
+    """
     data_files = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.csv')]
     combined_df = pd.concat([pd.read_csv(f, lineterminator='\n') for f in data_files])
     combined_df.reset_index(inplace=True, drop=True)
@@ -76,6 +102,5 @@ if __name__ == "__main__":
         files = process_raw_kaggle(args.data_path, args.output_dir)
         data = process_data_dir(args.output_dir, args.output_dir)
         merged_file = merge_stock_data(files, args.output_dir, 'kaggle-data.csv')
-        #filter_file = filter_out_neutral(merged_file, final_path, remove=True)
         # Split file will contain neutrals. 
         split_file = split_data_on_date(merged_file, split_date, args.output_dir, remove=True)
