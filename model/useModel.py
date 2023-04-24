@@ -82,7 +82,7 @@ if __name__ == '__main__':
                 # Drop all rows with that stock. 
                 num_unique_stock -= 1
                 data_source = data_source[data_source['stock'] != stock]
-        data_source.reset_index()
+        data_source = data_source.reset_index()
     
     print(f'Predicting on {num_unique_stock} stocks.')
 
