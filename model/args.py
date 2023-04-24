@@ -71,7 +71,7 @@ def add_use_model_args(parser: argparse.ArgumentParser) -> None:
     use_model_parameters = parser.add_argument_group('use model parameters')
 
     use_model_parameters.add_argument('-w', '--weights', type=str,
-                                      help='path to model weights. Follow format \`\{model_type\}:\{learning_rate\}:\{args.train_batch_size\}', 
+                                      help='path to model weights. Follow format \`{model_type\}:{learning_rate\}:{args.train_batch_size}', 
                                       required=True)
     
     use_model_parameters.add_argument('-d', '--data', type=str,

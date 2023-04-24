@@ -3,6 +3,8 @@ import seaborn as sns
 import argparse
 import os
 
+from typing import List, Any
+
 PLOTS_DIR = 'plots/'
 
 def plot_training_data(data: pd.DataFrame, args: argparse.Namespace = None):
@@ -31,6 +33,13 @@ def plot_loss_data(data: pd.DataFrame, args: argparse.Namespace = None):
     fig2.set_title(title)
     fig2.get_figure().savefig(output_path)
     fig2.get_figure().clf()
+
+def plot_confusion_matrix(matrix: List[Any], output_path: str = 'confusion_matrix') -> None:
+    df_cm = pd.DataFrame(matrix, index = range(3),
+                  columns = [i for i in range(3)])
+    fig3 = sns.heatmap(df_cm, annot=True)
+    fig3.get_figure().savefig(output_path)
+    fig3.get_figure().clf()
 
 if __name__ == '__main__':
     data_path = '../data/training_data.csv'

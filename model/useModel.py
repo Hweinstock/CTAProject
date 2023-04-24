@@ -2,14 +2,14 @@ from model import ModelClass, HeadlineData, MAX_LEN, get_model
 from transformers import DistilBertTokenizer
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 import torch 
 import pandas as pd
+from plotTrainingData import plot_confusion_matrix
 from typing import List, Tuple
 from args import get_use_model_args
 import os 
 
-#model = torch.load('3labelmodel')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class ModelPredictor:
@@ -59,16 +59,12 @@ class ModelPredictor:
                 
                 for confidence_val in confidence:
                     confidence_values.append(confidence_val.item())
-
+        conf_matrix = confusion_matrix(true_values, predictions)
         print(classification_report(true_values, predictions))
-        return predictions, confidence_values
+        return predictions, confidence_values, conf_matrix
  
 if __name__ == '__main__':
     args = get_use_model_args()
-    # if device != 'cuda':
-    #     model = torch.load('../../3labelstockmodel.bin', map_location=torch.device('cpu'))
-    # else:
-    #     model = torch.load('../../3labelstockmodel.bin')
     weights_file_basename = os.path.basename(args.weights)
     model_type = weights_file_basename.split("_")[0].split(":")[0]
     tokenizer, model_source, embedding_size = get_model(model_type)
@@ -78,14 +74,15 @@ if __name__ == '__main__':
     model.eval()
     data_source = pd.read_csv(args.data)
     predictor = ModelPredictor(model, tokenizer)
-    res = predictor.evaluate(data_source=data_source)
+    labels, confidence, conf_matrix = predictor.evaluate(data_source=data_source)
     
     raw_data = {
         'date': data_source['date'].tolist(),
         'stock': data_source['stock'].tolist(),
-        'pred_label': res[0],
-        'confidence': res[1],
+        'pred_label': labels,
+        'confidence': confidence,
     }
+    plot_confusion_matrix(conf_matrix)
     output = pd.DataFrame(raw_data)
     output.to_csv(args.output)
     
