@@ -81,6 +81,10 @@ def add_use_model_args(parser: argparse.ArgumentParser) -> None:
     use_model_parameters.add_argument('-o', '--output', type=str, 
                                       help="path to outputfile for predictions (will be .csv)",
                                       default='predictions.csv')
+
+    use_model_parameters.add_argument('-c', '--cutoff', type=int, 
+                                      help="Number of predictions per stock required to keep.", 
+                                      default=None)
     
 def get_model_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__,
