@@ -408,7 +408,7 @@ def main():
         training_data.append(flattened_report)
 
         print("Saving model...")
-        model_str = f"{args.model_type}:{args.learning_rate}:{args.train_batch_size}"
+        model_str = "".join([x for x in f"{args.model_type}:{args.learning_rate}:{args.train_batch_size}" if x == '.'])
         output_model_file = f'+{model_str}_{epoch}.pt'
         weights_dir = os.path.join(args.output_dir, 'weights/')
         
