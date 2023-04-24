@@ -2,6 +2,7 @@ import pandas as pd
 import seaborn as sns
 import argparse
 import os
+import matplotlib.pyplot as plt
 
 from typing import List, Any
 
@@ -35,9 +36,14 @@ def plot_loss_data(data: pd.DataFrame, args: argparse.Namespace = None):
     fig2.get_figure().clf()
 
 def plot_confusion_matrix(matrix: List[Any], output_path: str = 'confusion_matrix') -> None:
-    df_cm = pd.DataFrame(matrix, index = range(3),
-                  columns = [i for i in range(3)])
-    fig3 = sns.heatmap(df_cm, annot=True)
+    df_cm = pd.DataFrame(matrix, index = ['Buy', 'Sell', 'Neutral'],
+                  columns = [i for i in ['Buy', 'Sell', 'Neutral']])
+    
+    plt.figure(figsize = (10,7))
+    plt.title('Confusion Matrix on Held-Out Test Set')
+    fig3 = sns.heatmap(df_cm, annot=True, cmap="BuPu")
+    plt.xlabel('True Labels')
+    plt.ylabel('Predicted Labels')
     fig3.get_figure().savefig(output_path)
     fig3.get_figure().clf()
 

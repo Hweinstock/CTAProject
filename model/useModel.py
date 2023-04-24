@@ -69,7 +69,7 @@ if __name__ == '__main__':
     model_type = weights_file_basename.split("_")[0].split(":")[0]
     tokenizer, model_source, embedding_size = get_model(model_type)
     model = ModelClass(model_source, embedding_size, is_distill=model_type == 'distill', freeze=False)
-    model.load_state_dict(torch.load(args.weights))
+    #model.load_state_dict(torch.load(args.weights))
     model.to(device)
     model.eval()
     data_source = pd.read_csv(args.data)
