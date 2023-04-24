@@ -74,13 +74,15 @@ if __name__ == '__main__':
     model.eval()
     data_source = pd.read_csv(args.data)
     unique_stocks = data_source['stock'].unique()
+    num_unique_stock = len(unique_stocks)
     if not args.cutoff is None:
         for stock in unique_stocks:
             num_occurences = len(data_source[data_source['stock'] == stock].index)
             if num_occurences < args.cutoff:
                 # Drop all rows with that stock. 
+                num_unique_stock -= 1
                 data_source = data_source[data_source['stock'] != stock]
-    print(f'Predicting on {len(unique_stocks)} stocks.')
+    print(f'Predicting on {num_unique_stock} stocks.')
 
     predictor = ModelPredictor(model, tokenizer)
     labels, confidence, conf_matrix = predictor.evaluate(data_source=data_source)
