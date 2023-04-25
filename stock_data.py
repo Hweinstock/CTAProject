@@ -133,6 +133,9 @@ def process_stock_csv(path: str, output_path: str) -> str:
 
     if 'title' in df.columns:
         df.rename(columns={'title':'text'}, inplace=True)
+    
+    # Add stock in front of all text. 
+    df['text'] = df['stock'] + ":" + df['text']
 
     filename = os.path.basename(path)
     outputfile = os.path.join(output_path, filename)
@@ -141,9 +144,6 @@ def process_stock_csv(path: str, output_path: str) -> str:
     # for col in get_stock_historical_headers():
     #     df[col] = (df[col] / 2.0) + 0.5
 
-    # TODO: check if placing it here works better. 
-    # df = fill_in_missing_dates(df)
-    # df = aggregate_delta_days(df)
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)

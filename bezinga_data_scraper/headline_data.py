@@ -9,7 +9,7 @@ from stock_data import get_stock_data
 from tqdm import tqdm
 
 def fill_in_missing_dates(stock_articles_df: pd.DataFrame) -> pd.DataFrame:
-    stock_articles_df = stock_articles_df.groupby(by='date').agg({'title': lambda x: ".".join(x), 
+    stock_articles_df = stock_articles_df.groupby(by='date').agg({'title': lambda x: ". ".join(x) + ".", 
                                                'stock': lambda x: x.iloc[0]}).reset_index()
     
     stock_articles_df = stock_articles_df.set_index('date', drop=True)
@@ -35,7 +35,7 @@ def aggregate_day_k(original_df: pd.DataFrame, stock_articles_df: pd.DataFrame, 
         pd.DataFrame: updated version of stock_articles_df with offset text added. 
     """
     stock_articles_df['offset_text'] = original_df['text'].shift(k).fillna("")
-    stock_articles_df['text'] = stock_articles_df['offset_text'] + " " + stock_articles_df['text']
+    stock_articles_df['text'] = stock_articles_df['offset_text'] + ' ' + stock_articles_df['text']
     stock_articles_df['text'] = stock_articles_df['text'].str.strip()
     stock_articles_df = stock_articles_df.drop(columns=['offset_text'])
     # Delete concatenations of empty strings. 
@@ -58,7 +58,6 @@ def aggregate_delta_days(stock_articles_df: pd.DataFrame) -> pd.DataFrame:
     original_df = stock_articles_df.copy()
     for window in range(1, STOCK_PRICE_LAG+1):
         stock_articles_df = aggregate_day_k(original_df, stock_articles_df, k=window)
-    #stock_articles_df['text'] = stock_articles_df['text'].apply(adjust_text)
     return stock_articles_df
 
 def download_data(start_date: datetime, end_date: datetime, article_count_cutoff: int, output_dir: str = './data/raw_headline_data/'):
@@ -81,7 +80,7 @@ def download_data(start_date: datetime, end_date: datetime, article_count_cutoff
     matching_stocks = 0
     for index, cur_stock in tqdm(enumerate(unique_stocks), total=len(unique_stocks)):
         RootLogger.log_debug(f"On index {index} of {len(unique_stocks)}.")
-        stock_articles = articles_df[articles_df['stock'] == cur_stock]
+        stock_articles = articles_df[articles_df['stock'] == cur_stock].copy()
 
         if len(stock_articles.index) < article_count_cutoff:
             continue 
@@ -91,6 +90,7 @@ def download_data(start_date: datetime, end_date: datetime, article_count_cutoff
         stock_start_date = parser.parse(stock_articles.iloc[0]['date'])
         stock_end_date = parser.parse(stock_articles.iloc[-1]['date'])
 
+        # Add periods to the end of headlines before we aggregate them. 
         stock_articles = fill_in_missing_dates(stock_articles)
         agg_stock_articles = aggregate_delta_days(stock_articles)
 
