@@ -45,7 +45,7 @@ class SimpleStrategy(Strategy):
         return self.data.df.Confidence[-1]
     
     def next(self):
-        #self.position.close()
+        self.position.close()
     
         if self.current_prediction() == 1:
             conf = self.current_confidence()

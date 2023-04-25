@@ -38,7 +38,7 @@ def plot_loss_data(data: pd.DataFrame, args: argparse.Namespace = None):
 def plot_confusion_matrix(matrix: List[Any], output_path: str = 'confusion_matrix') -> None:
     df_cm = pd.DataFrame(matrix, index = ['Buy', 'Sell', 'Neutral'],
                   columns = [i for i in ['Buy', 'Sell', 'Neutral']])
-    
+    output_path = os.path.join(PLOTS_DIR, output_path)
     plt.figure(figsize = (10,7))
     plt.title('Confusion Matrix on Held-Out Test Set')
     fig3 = sns.heatmap(df_cm, annot=True, cmap="BuPu")
