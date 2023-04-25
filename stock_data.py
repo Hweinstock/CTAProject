@@ -135,6 +135,7 @@ def process_stock_csv(path: str, output_path: str) -> str:
         df.rename(columns={'title':'text'}, inplace=True)
     
     # Add stock in front of all text. 
+    df = df.astype({'stock':'str', 'text':'str'})
     df['text'] = df['stock'] + ":" + df['text']
 
     filename = os.path.basename(path)
