@@ -6,7 +6,7 @@ import os
 from typing import List, Tuple
 from tqdm import tqdm
 import numpy as np
-
+from dateutil import parser
 from config.load_env import DATE_FORMAT, STOCK_PRICE_LAG
 from config.logger import RootLogger
 
@@ -82,7 +82,7 @@ def merge_stock_data(file_names: List[str], output_dir: str, output_name: str, r
     """
     output_file = os.path.join(output_dir, output_name)
     RootLogger.log_info(f"Merged stock data into {output_file}")
-    df = pd.concat((pd.read_csv(f) for f in file_names), ignore_index=True)
+    df = pd.concat((pd.read_csv(f, lineterminator='\n') for f in file_names), ignore_index=True)
     if remove:
         for f in file_names:
             os.remove(f)
@@ -102,12 +102,15 @@ def filter_out_neutral(data_file: str, output_file: str, remove: bool = True) ->
         str: filepath to new file. 
     """
     RootLogger.log_info(f"Filtering out neutral days from {output_file}")
-    og_df = pd.read_csv(data_file)
+    og_df = pd.read_csv(data_file, lineterminator='\n')
     if remove:
         os.remove(data_file)
     new_df = og_df[og_df['label'] != Label.NEUTRAL]
     new_df.to_csv(output_file, index=False)
     return output_file
+
+def get_stock_historical_headers():
+    return [f"{i}_past_close" for i in range(1, STOCK_PRICE_LAG+1)]
 
 def process_stock_csv(path: str, output_path: str) -> str:
     """Process individual CSV file by adding label.  
@@ -119,19 +122,29 @@ def process_stock_csv(path: str, output_path: str) -> str:
     Returns:
         str: filepath to new csv file. 
     """
-
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, lineterminator='\n')
 
     df['label'] = df['next_close'].apply(determine_label)
+
     for col in df.columns:
         df[col].replace('', np.nan, inplace=True)
+
     df.dropna(inplace=True)
 
     if 'title' in df.columns:
         df.rename(columns={'title':'text'}, inplace=True)
+    
+    # Add stock in front of all text. 
+    df = df.astype({'stock':'str', 'text':'str'})
+    df['text'] = df['stock'] + ":" + df['text']
 
     filename = os.path.basename(path)
     outputfile = os.path.join(output_path, filename)
+
+    # Normalize stock data to 0-1 range. 
+    # for col in get_stock_historical_headers():
+    #     df[col] = (df[col] / 2.0) + 0.5
+
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
@@ -157,7 +170,7 @@ def process_data_dir(dir_path: str, output_path: str) -> List[str]:
     RootLogger.log_info(f"Exporting files to {output_path}")
     return output_files
 
-def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, remove: bool = False) -> Tuple[str, str]:
+def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, remove: bool = False, chunks: int =15, data_df: pd.DataFrame = None) -> List[str]:
     """Read in a pandas df from csv and write two csv: one before a date, one after. 
 
     Args:
@@ -165,23 +178,85 @@ def split_data_on_date(data_path: str, target_date: datetime, output_dir: str, r
         target_date (datetime): date to split on. 
         output_dir (str): where to write generated .csv files.
         remove (bool): delete original file if true.  
+        chunks (int): number of files to split training data into (pre-date). 
+        data_df (pd.DataFrame): an arguement to overide data_path, and give the full df. 
 
     Returns:
         Tuple[str, str]: pair of filepath to newly written files. 
     """
     RootLogger.log_info(f"Splitting dataframe {data_path} based on {target_date.strftime(DATE_FORMAT)}")
-    orig_df = pd.read_csv(data_path)
+    if data_df is None:
+        orig_df = pd.read_csv(data_path, lineterminator='\n')
+    else:
+        orig_df = data_df
     
     df_before = orig_df.loc[pd.to_datetime(orig_df['date']) <= target_date]
     df_after = orig_df.loc[pd.to_datetime(orig_df['date']) > target_date]
 
     if remove:
         os.remove(data_path)
-        
-    before_filepath = os.path.join(output_dir, f"<={target_date.strftime(DATE_FORMAT)}.csv")
-    after_filepath = os.path.join(output_dir, f">{target_date.strftime(DATE_FORMAT)}.csv")
+    
+    before_dfs = np.array_split(df_before, chunks)
+    filepaths = []
+    for cur_chunk in range(chunks):
+        before_filepath = os.path.join(output_dir, f"<={target_date.strftime(DATE_FORMAT)}_{cur_chunk}.csv")
+        filepaths.append(before_filepath)
+        before_dfs[cur_chunk].to_csv(before_filepath, index=False)
 
-    df_before.to_csv(before_filepath, index=False)
+    after_filepath = os.path.join(output_dir, f">{target_date.strftime(DATE_FORMAT)}.csv")
+    filepaths.append(after_filepath)
     df_after.to_csv(after_filepath, index=False)
 
-    return before_filepath, after_filepath
+    return filepaths
+
+def fill_in_missing_dates(data_df: pd.DataFrame) -> pd.DataFrame:
+    data_df = data_df.groupby(by='date').agg({'text': lambda x: ".".join(x), 
+                                               'stock': lambda x: x.iloc[0]}).reset_index()
+    
+    data_df = data_df.set_index('date', drop=True)
+    data_df.index=pd.to_datetime(data_df.index)
+    data_df = data_df.asfreq('D', fill_value='')
+    data_df['date'] = data_df.index 
+    data_df.reset_index(inplace=True, drop=True)
+    data_df['date'] = data_df['date'].dt.strftime('%Y-%m-%d')
+
+    return data_df
+
+def aggregate_day_k(original_df: pd.DataFrame, data_df: pd.DataFrame, k: int) -> pd.DataFrame:
+    """Add text for day d-k to day d and return the resulting dataframe. 
+
+    We must pass in the original to avoid duplicate adding. 
+
+    Args:
+        original_df (pd.DataFrame): df before any text was modified. 
+        stock_articles_df (pd.DataFrame): df currently in modification
+        k (int): offset to add text
+
+    Returns:
+        pd.DataFrame: updated version of stock_articles_df with offset text added. 
+    """
+    data_df['offset_text'] = original_df['text'].shift(k).fillna("")
+    data_df['text'] = data_df['offset_text'] + " " + data_df['text']
+    data_df['text'] = data_df['text'].str.strip()
+    data_df = data_df.drop(columns=['offset_text'])
+    # Delete concatenations of empty strings. 
+    data_df.loc[data_df['text'] == ' '] = ''
+    return data_df
+
+def aggregate_delta_days(data_df: pd.DataFrame) -> pd.DataFrame:
+    """Comprise text from delta days together in the text field. 
+
+    Args:
+        stock_articles_df (pd.DataFrame): source df
+
+    Returns:
+        pd.DataFrame: output df
+    """
+
+
+    data_df.rename(columns={'title':'text'}, inplace=True)
+    original_df = data_df.copy()
+    for window in range(1, STOCK_PRICE_LAG+1):
+        data_df = aggregate_day_k(original_df, data_df, k=window)
+
+    return data_df

@@ -1,25 +1,21 @@
 import pandas as pd 
-from typing import List
-from tqdm import tqdm 
 import os 
 from dateutil import parser
-
+from args import get_process_headline_arguments
+from typing import List
 from config.logger import RootLogger
-from stock_data import merge_stock_data, filter_out_neutral, process_data_dir, split_data_on_date
+from stock_data import merge_stock_data, filter_out_neutral, process_data_dir, split_data_on_date, aggregate_delta_days, fill_in_missing_dates
 
 if __name__ == "__main__":
-    console_level = 2
-    file_level = 3
-    RootLogger.initialize('/config/', console_level, file_level)
+    args = get_process_headline_arguments()
+    RootLogger.initialize('./config/', args.verbosity, args.file_verbosity)
 
-    data_path = "data/raw_headline_data/"
-
-    output_path = "data/processed_headline_data/"
+    output_path = args.output_dir
     final_path = os.path.join(output_path, 'headline-data-filtered.csv')
-    split_date = parser.parse("2022-03-01")
+    split_date = parser.parse(args.split_date)
 
-    files = process_data_dir(data_path, output_path)
+    files = process_data_dir(args.data_path, output_path)
     merged_file = merge_stock_data(files, output_path, 'headline-data.csv')
-    filter_file = filter_out_neutral(merged_file, final_path, remove=False)
+    #filter_file = filter_out_neutral(merged_file, final_path, remove=True)
     # Split file will contain neutrals. 
-    split_file = split_data_on_date(merged_file, split_date, output_path)
+    split_file = split_data_on_date(merged_file, split_date, output_path, remove=True)

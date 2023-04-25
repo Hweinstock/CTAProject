@@ -2,15 +2,14 @@ from config.logger import RootLogger
 from bezinga_data_scraper.headline_data import download_data
 from config.load_env import DATE_FORMAT
 from datetime import datetime
+from args import get_headline_data_arguments
 
 if __name__ == '__main__':
-    console_level = 2
-    file_level = 3
-    RootLogger.initialize('/config/', console_level, file_level)
-
-    start_date = datetime.strptime('2000-01-06', DATE_FORMAT)
-    end_date = datetime.strptime('2023-03-09', DATE_FORMAT)
-    df = download_data(start_date, end_date, output_dir='data/raw_headline_data/')
+    args = get_headline_data_arguments()
+    RootLogger.initialize('./config/', args.verbosity, args.file_verbosity)
+    start_date = datetime.strptime(args.start_date, DATE_FORMAT)
+    end_date = datetime.strptime(args.end_date, DATE_FORMAT)
+    download_data(start_date, end_date, article_count_cutoff=args.minimum_count, output_dir=args.output_dir)
 
 
     

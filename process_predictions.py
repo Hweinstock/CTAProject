@@ -8,6 +8,7 @@ from dateutil import parser
 import os
 from stock_data import get_stock_data
 from config.load_env import DATE_FORMAT
+from args import get_process_predictions_arguments
 
 
 BUFFER_SIZE = 5
@@ -95,21 +96,21 @@ def add_stock_data(df: pd.DataFrame) -> pd.DataFrame:
     return combined_df
 
 if __name__ == '__main__':
-    predictions_path = 'backtester/predictions.csv'
-    export_path = 'data/prediction_data'
+    args = get_process_predictions_arguments()
 
-    df = pd.read_csv(predictions_path, index_col=[0])
+    df = pd.read_csv(args.predictions_path, index_col=[0])
     split_dfs = split_dataframe(df)
-    #res_df = add_stock_data(split_dfs[5])
 
-    if not os.path.exists(export_path):
-        os.mkdir(export_path)
+    if not os.path.exists(args.output_dir):
+        os.mkdir(args.output_dir)
     
     for index, cur_df in tqdm(enumerate(split_dfs), total=len(split_dfs)):
         res_df = add_stock_data(cur_df)
+        if len(res_df.index) == 0:
+            continue
         stock = res_df['stock'].iloc[0]
         res_df = res_df.drop('stock', axis=1)
-        filepath = os.path.join(export_path, f"{stock}_predictions.csv")
+        filepath = os.path.join(args.output_dir, f"{stock}_predictions.csv")
         res_df.to_csv(filepath, index=False)
 
 

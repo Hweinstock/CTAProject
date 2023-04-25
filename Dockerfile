@@ -30,6 +30,7 @@ pip install benzinga==1.21 && \
 pip install transformers==4.27.3 && \
 pip install colorama==0.4.6 && \
 pip install scikit-learn==1.2.2 && \
-pip install Backtesting==0.3.3
+pip install Backtesting==0.3.3 && \ 
+pip install seaborn==0.12.2
 
 WORKDIR /project/
