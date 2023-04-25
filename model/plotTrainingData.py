@@ -15,7 +15,7 @@ def plot_training_data(data: pd.DataFrame, args: argparse.Namespace = None):
         title = f"+{args.model_type}, Lr: {args.learning_rate}, trb: {args.train_batch_size}"
     else:
         title = 'Training Plot'
-    output_path = os.path.join(PLOTS_DIR, title)
+    output_path = ''.join([x for x in os.path.join(PLOTS_DIR, title) if x != '.'])
     sns.set_theme(style="whitegrid")
     fig = sns.lineplot(data=plot_data, palette="tab10", linewidth=1.0)
     fig.set_title(title)
@@ -28,7 +28,7 @@ def plot_loss_data(data: pd.DataFrame, args: argparse.Namespace = None):
         title = f"+Loss:{args.model_type}, Lr: {args.learning_rate}, trb: {args.train_batch_size}"
     else:
         title = 'Training Plot'
-    output_path = os.path.join(PLOTS_DIR, title)
+    output_path = ''.join([x for x in os.path.join(PLOTS_DIR, title) if x != '.'])
     sns.set_theme(style='darkgrid')
     fig2 = sns.lineplot(data=plot_data2, palette='tab10', linewidth=2.0)
     fig2.set_title(title)
