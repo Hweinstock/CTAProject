@@ -3,21 +3,7 @@ import pandas as pd
 import seaborn as sns 
 import matplotlib.pyplot as plt
 from typing import List, Any
-
-def read_in_chunked_data(dir_path: str, prefix: str) -> pd.DataFrame:
-    """Read in all files with prefix from directory as pandas df and concat them into one df. 
-
-    Args:
-        dir_path (str): path to search for files. 
-        prefix (str): prefix to match in path. 
-
-    Returns:
-        pd.DataFrame: concatted/combined df
-    """
-    data_files = [os.path.join(dir_path, f) for f in os.listdir(dir_path) if f.startswith(prefix) and f.endswith('.csv')]
-    combined_df = pd.concat([pd.read_csv(f, lineterminator='\n') for f in data_files])
-    combined_df.reset_index(inplace=True, drop=True)
-    return combined_df
+from read_data import read_in_chunked_data
 
 def get_bins(min_val: int, max_val: int, num_bins: int):
     interval = max_val - min_val 
@@ -42,7 +28,25 @@ def plot_text_length_hist(data: pd.DataFrame) -> None:
     fig.set(xlabel='Word Count')
     plt.xticks(every_other_element(bins))
     fig.set_title('Aggregated Headline Lengths (delta=10)')
-    fig.get_figure().savefig(os.path.join('plots', 'test_length_hist'), bbox_inches="tight")
+    fig.get_figure().savefig(os.path.join('plots', 'doc_length_hist'), bbox_inches="tight")
+    fig.get_figure().clf()
+
+def plot_stock_hist(data: pd.DataFrame) -> None:
+    stock_counts = data['stock'].value_counts()
+    stock_counts = stock_counts[stock_counts >= 10]
+    id = stock_counts.idxmax() 
+    print(id)
+    min_val = 0
+    max_val = 3000
+    num_bins = 100
+    bins = get_bins(min_val, max_val, num_bins)
+    sns.set_theme(style="darkgrid")
+    fig = sns.histplot(data=stock_counts, 
+                        linewidth=0.5, 
+                        bins=bins)
+    fig.set(xlabel='Stock')
+    fig.set_title('Distribution of Documents over Stocks')
+    fig.get_figure().savefig(os.path.join('plots', 'stock_hist'), bbox_inches='tight')
     fig.get_figure().clf()
 
 if __name__ == '__main__':
@@ -57,6 +61,6 @@ if __name__ == '__main__':
     print(f"Median length of headline: {full_df['text_len'].median()}")
 
     plot_text_length_hist(full_df)
-
+    plot_stock_hist(full_df)
 
 
