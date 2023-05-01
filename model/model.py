@@ -9,6 +9,7 @@ from plotTrainingData import plot_training_data, plot_loss_data
 import os
 from args import get_model_args
 from typing import Dict, Tuple, Any, List
+from dateutil import parser
 
 # adapted from: https://colab.research.google.com/github/DhavalTaunk08/NLP_scripts/blob/master/sentiment_analysis_using_roberta.ipynb
 
@@ -181,9 +182,17 @@ class ModelFineTuner:
     
     def initialize_dataloaders(self, data_source: pd.DataFrame) -> Tuple[DataLoader]:
         train_size = 0.9
-        train_data = data_source.sample(frac=train_size, random_state=200)
-        test_data = data_source.drop(train_data.index).reset_index(drop=True)
-        train_data = train_data.reset_index(drop=True)
+        data_source['datetime'] = data_source['date'].map(lambda x: parser.parse(x))
+        data_source.sort_values(by='datetime', inplace=True)
+        data_source.drop('datetime', axis=1, inplace=True)
+
+        data_points = len(data_source.index)
+        cutoff = int(data_points*train_size)
+        train_data = data_source[:cutoff].reset_index(drop=True)
+        test_data = data_source[cutoff:].reset_index(drop=True)
+
+        print(f"Train Dates: {train_data.iloc[0]['date']} to {train_data.iloc[-1]['date']}.")
+        print(f"Test Dates: {test_data.iloc[0]['date']} to {test_data.iloc[-1]['date']}.")
         
         data_source_pos = data_source[data_source['label'] == 1]
         data_source_neg = data_source[data_source['label'] == 0]

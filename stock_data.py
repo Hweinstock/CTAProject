@@ -6,7 +6,6 @@ import os
 from typing import List, Tuple
 from tqdm import tqdm
 import numpy as np
-from dateutil import parser
 from config.load_env import DATE_FORMAT, STOCK_PRICE_LAG, HARD_ARTICLE_COUNT_CUTOFF
 from config.logger import RootLogger
 
