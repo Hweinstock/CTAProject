@@ -7,11 +7,13 @@ from typing import List, Tuple
 from tqdm import tqdm
 import numpy as np
 from dateutil import parser
-from config.load_env import DATE_FORMAT, STOCK_PRICE_LAG
+from config.load_env import DATE_FORMAT, STOCK_PRICE_LAG, HARD_ARTICLE_COUNT_CUTOFF
 from config.logger import RootLogger
 
 INC_CUTOFF = 0.005 
 DEC_CUTOFF = -0.005
+MAX_LENGTH_TEXT = 500
+CUTOFF = 10
 
 class Label(IntEnum):
     INCREASE = 0
@@ -112,7 +114,16 @@ def filter_out_neutral(data_file: str, output_file: str, remove: bool = True) ->
 def get_stock_historical_headers():
     return [f"{i}_past_close" for i in range(1, STOCK_PRICE_LAG+1)]
 
-def process_stock_csv(path: str, output_path: str) -> str:
+def most_recent_text(text: str):
+    words = text.split()
+    if len(words) > MAX_LENGTH_TEXT:
+        recent_words = words[MAX_LENGTH_TEXT:]
+        recent_words_str = " ".join(recent_words)
+        return recent_words_str
+    else:
+        return text
+
+def process_stock_csv(path: str, output_path: str) -> str or None:
     """Process individual CSV file by adding label.  
 
     Args:
@@ -120,10 +131,10 @@ def process_stock_csv(path: str, output_path: str) -> str:
         output_path (str): where to export resulting csv
 
     Returns:
-        str: filepath to new csv file. 
+        str or None: filepath to new csv file or None if .csv doesn't meat article count cutoff. 
     """
     df = pd.read_csv(path, lineterminator='\n')
-
+    
     df['label'] = df['next_close'].apply(determine_label)
 
     for col in df.columns:
@@ -138,6 +149,9 @@ def process_stock_csv(path: str, output_path: str) -> str:
     df = df.astype({'stock':'str', 'text':'str'})
     df['text'] = df['stock'] + ":" + df['text']
 
+    # Chop off text beyond threshhold. 
+    df['text'] = df['text'].map(lambda h: most_recent_text(h))
+
     filename = os.path.basename(path)
     outputfile = os.path.join(output_path, filename)
 
@@ -145,9 +159,12 @@ def process_stock_csv(path: str, output_path: str) -> str:
     # for col in get_stock_historical_headers():
     #     df[col] = (df[col] / 2.0) + 0.5
 
+    if(len(df.index) < HARD_ARTICLE_COUNT_CUTOFF):
+        return None 
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
+    
     df.to_csv(outputfile, index=False)
     return outputfile
 
@@ -166,7 +183,8 @@ def process_data_dir(dir_path: str, output_path: str) -> List[str]:
     output_files = []
     for _, csv_name in tqdm(enumerate(csv_to_process), total=len(csv_to_process)):
         filename = process_stock_csv(os.path.join(dir_path, csv_name), output_path)
-        output_files.append(filename)
+        if filename is not None:
+            output_files.append(filename)
     RootLogger.log_info(f"Exporting files to {output_path}")
     return output_files
 

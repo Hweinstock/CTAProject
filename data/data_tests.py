@@ -11,7 +11,7 @@ class TestData(unittest.TestCase):
     def setUp(self):
         data_source = 'processed_headline_data/'
         self.full_df = read_in_chunked_data(data_source, '')
-        self.full_df['text_len'] = self.full_df['text'].map(lambda x: len(x))
+        self.full_df['text_len'] = self.full_df['text'].map(lambda x: len(x.split()))
 
     def test_structure(self):
         self.assertNotEqual(len(self.full_df.index), 0)

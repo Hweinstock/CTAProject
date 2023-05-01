@@ -54,9 +54,12 @@ if __name__ == '__main__':
     text_length_hist = 'text_length_hist'
     full_df = read_in_chunked_data(data_source, '')
     num_stocks = len(full_df['stock'].unique())
+    
     print(f"Dataset contains {num_stocks} unique stocks")
     print(f"Dataset contains {len(full_df.index)} headlines")
+
     full_df['text_len'] = full_df['text'].map(lambda x: len(x.split()))
+
     print(f"Average length of headline: {full_df['text_len'].mean()}")
     print(f"Median length of headline: {full_df['text_len'].median()}")
 
