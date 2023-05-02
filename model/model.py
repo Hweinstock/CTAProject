@@ -117,13 +117,12 @@ class ModelClass(torch.nn.Module):
         second_middle_layer_size = int(middle_layer_size / 2.0)
         # MLP
         self.layer_1 = torch.nn.Linear(model_embedding_size + HISTORICAL_DELTA, middle_layer_size)
-        self.layer_2 = torch.nn.Linear(middle_layer_size, middle_layer_size)
-        self.layer_3 = torch.nn.Linear(middle_layer_size, second_middle_layer_size)
-        self.dropout_1 = torch.nn.Dropout(0.2)
-        self.dropout_2 = torch.nn.Dropout(0.2)
-        self.dropout_3 = torch.nn.Dropout(0.2)
+        self.layer_2 = torch.nn.Linear(middle_layer_size, second_middle_layer_size)
+        self.dropout_1 = torch.nn.Dropout(0.1)
+        self.dropout_2 = torch.nn.Dropout(0.1)
         self.classifier = torch.nn.Linear(second_middle_layer_size, 3)
         self.ac_final = torch.nn.Softmax(dim=1)
+        self.activation_function = torch.nn.Tanh()
         self.is_distill = is_distill
     
     def forward(self, input_ids, attention_mask, token_type_ids, historical_data):
@@ -136,23 +135,19 @@ class ModelClass(torch.nn.Module):
                             attention_mask=attention_mask)
         hidden_state = output_1[0]
         pooler = hidden_state[:, 0]
-        historical_data = torch.nn.GELU()(historical_data.float())
+        historical_data = historical_data.float()
         # Add historical data to the layer. 
         pooler = torch.cat((pooler, historical_data), 1)
         # Apply it so that they are on same scale. 
         #pooler = torch.nn.GELU()(pooler)
         # Feed to MLP
         pooler = self.layer_1(pooler)
-        pooler = torch.nn.GELU()(pooler)
+        pooler = self.activation_function(pooler)
         pooler = self.dropout_1(pooler)
 
         pooler = self.layer_2(pooler)
-        pooler = torch.nn.GELU()(pooler)
+        pooler = self.activation_function(pooler)
         pooler = self.dropout_2(pooler)
-
-        pooler = self.layer_3(pooler)
-        pooler = torch.nn.GELU()(pooler)
-        pooler = self.dropout_3(pooler)
 
         pooler = self.classifier(pooler)
         # Apply softmax to final layer. 

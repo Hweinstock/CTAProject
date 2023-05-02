@@ -37,9 +37,16 @@ def process_raw_kaggle(csv_path: str, export_path: str) -> List[str]:
         stock_df = add_stock_data(stock_df)
         
 
+        stock_df = stock_df.astype({'stock':'str', 'text':'str'})
+        stock_df.dropna(inplace=True)
+        # If we don't meet cutoff
+        if(len(stock_df.index) < HARD_ARTICLE_COUNT_CUTOFF):
+            continue
+
         # Export .csv
         if not os.path.exists(export_path):
             os.mkdir(export_path)
+
         output_file = os.path.join(export_path, f'{stock}_raw.csv')
         stock_df.to_csv(output_file, index=False)
         files.append(output_file)
@@ -94,13 +101,14 @@ if __name__ == "__main__":
     RootLogger.initialize('./config/', args.verbosity, args.file_verbosity)
 
     split_date = parser.parse(args.split_date)
+    raw_kaggle_dir = './data/raw_kaggle_data/'
 
     if args.resplit:
         RootLogger.log_info(f"Resplitting data on date {args.split_date}")
         split_file = resplit_data(split_date)
     else:
-        files = process_raw_kaggle(args.data_path, args.output_dir)
-        data = process_data_dir(args.output_dir, args.output_dir)
+        files = process_raw_kaggle(args.data_path, './data/raw_kaggle_data/')
+        data = process_data_dir('./data/raw_kaggle_data/', args.output_dir)
         merged_file = merge_stock_data(files, args.output_dir, 'kaggle-data.csv')
         # Split file will contain neutrals. 
         split_file = split_data_on_date(merged_file, split_date, args.output_dir, remove=True)

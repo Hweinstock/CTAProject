@@ -133,6 +133,9 @@ def process_stock_csv(path: str, output_path: str) -> str or None:
         str or None: filepath to new csv file or None if .csv doesn't meat article count cutoff. 
     """
     df = pd.read_csv(path, lineterminator='\n')
+    if 'next_close' not in df.columns:
+        RootLogger.log_error(f"Found df with no next_close columns at {path}. Dropping from data.")
+        return None 
     
     df['label'] = df['next_close'].apply(determine_label)
 
@@ -146,10 +149,10 @@ def process_stock_csv(path: str, output_path: str) -> str or None:
     
     # Add stock in front of all text. 
     df = df.astype({'stock':'str', 'text':'str'})
-    df['text'] = df['stock'] + ":" + df['text']
 
     # Chop off text beyond threshhold. 
     df['text'] = df['text'].map(lambda h: most_recent_text(h))
+    df['text'] = df['stock'] + ":" + df['text']
 
     filename = os.path.basename(path)
     outputfile = os.path.join(output_path, filename)
