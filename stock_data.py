@@ -9,8 +9,8 @@ import numpy as np
 from config.load_env import DATE_FORMAT, STOCK_PRICE_LAG, HARD_ARTICLE_COUNT_CUTOFF
 from config.logger import RootLogger
 
-INC_CUTOFF = 0.005 
-DEC_CUTOFF = -0.005
+INC_CUTOFF = 0.01 
+DEC_CUTOFF = -0.01
 MAX_LENGTH_TEXT = 500
 CUTOFF = 10
 

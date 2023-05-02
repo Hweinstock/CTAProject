@@ -32,6 +32,16 @@ class TestData(unittest.TestCase):
     def test_empty_text(self):
         self.assertGreater(self.full_df['text_len'].min(), 0)
 
+    def test_somewhat_balanced(self):
+        total = len(self.full_df.index)
+        increase_pct = len(self.full_df[self.full_df['label'] == 0].index) / total
+        decrease_pct = len(self.full_df[self.full_df['label'] == 1].index) / total
+        neutral_pct = len(self.full_df[self.full_df['label'] == 2].index) / total
+        print(increase_pct, decrease_pct, neutral_pct)
+        cutoff = 0.28 
+        self.assertGreater(increase_pct, cutoff)
+        self.assertGreater(decrease_pct, cutoff)
+        self.assertGreater(neutral_pct, cutoff)
 
 if __name__ == '__main__':
     unittest.main()
