@@ -138,7 +138,6 @@ class ModelClass(torch.nn.Module):
         # Add historical data to the layer. 
         pooler = torch.cat((pooler, historical_data.float()), 1)
         # Apply it so that they are on same scale. 
-        #pooler = torch.nn.GELU()(pooler)
         # Feed to MLP
         pooler = self.layer_1(pooler)
         pooler = self.activation_function(pooler)

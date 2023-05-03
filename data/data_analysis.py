@@ -35,7 +35,6 @@ def plot_stock_hist(data: pd.DataFrame) -> None:
     stock_counts = data['stock'].value_counts()
     stock_counts = stock_counts[stock_counts >= 10]
     id = stock_counts.idxmax() 
-    print(id)
     min_val = 0
     max_val = 3000
     num_bins = 100
@@ -49,6 +48,19 @@ def plot_stock_hist(data: pd.DataFrame) -> None:
     fig.get_figure().savefig(os.path.join('plots', 'stock_hist'), bbox_inches='tight')
     fig.get_figure().clf()
 
+def plot_label_hist(data: pd.DataFrame) -> None:
+    sns.set_theme(style="darkgrid")
+    fig = sns.histplot(data=data, 
+                       x = 'label_str', 
+                       stat = 'percent',
+                       linewidth=0.5, 
+                       hue = 'label_str', 
+                       palette = ['red', 'yellow', 'green'])
+    plt.legend([],[], frameon=False)
+    fig.set_title('Distribution of Corpus over Labels')
+    fig.get_figure().savefig(os.path.join('plots', 'labels_hist'), bbox_inches='tight')
+    fig.get_figure().clf()
+
 if __name__ == '__main__':
     data_source = 'processed_headline_data/'
     text_length_hist = 'text_length_hist'
@@ -59,11 +71,14 @@ if __name__ == '__main__':
     print(f"Dataset contains {len(full_df.index)} headlines")
 
     full_df['text_len'] = full_df['text'].map(lambda x: len(x.split()))
+    label_mappings = {0 : 'increasing', 1: 'decreasing', 2: 'neutral'}
+    full_df['label_str'] = full_df['label'].map(lambda x: label_mappings[x])
 
     print(f"Average length of headline: {full_df['text_len'].mean()}")
     print(f"Median length of headline: {full_df['text_len'].median()}")
 
     plot_text_length_hist(full_df)
     plot_stock_hist(full_df)
+    plot_label_hist(full_df)
 
 
