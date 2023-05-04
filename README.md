@@ -1,16 +1,12 @@
 # CTA Final Project
 
-## Running
-[colab notebook:](https://colab.research.google.com/drive/1AI5gzLZZMYNEnkfOxdt-SxgrHiEJ77pH#scrollTo=hsXTl74PrikK)
-## Setup 
+# Simple Setup
 
 clone the repository
 build the docker
 `docker-compose build cta`
 run the docker 
 `docker-compose run --rm cta`
-In the data_tools dir:
-`python3 main.py`
 
 Some papers we use:  
 - [TinyBert](https://arxiv.org/abs/2110.01518)  
@@ -29,3 +25,4 @@ This paper outlines the different techniquess used and outlines some critical ge
 This paper gives an overview of techniques used in the field and the emmerging techniques as well. It suggests general flows for financial forecasting as well as outlines common data sources and their effects. 
 - [Use of Dropout Layers](https://arxiv.org/pdf/1207.0580.pdf)  
 This paper introduces the idea of dropout layers which experimentally improve generalization by reducing overfitting. 
+
